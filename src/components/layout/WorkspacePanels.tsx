@@ -1,3 +1,5 @@
+import { ImageUpload } from '../upload/ImageUpload';
+
 function LeftPanel() {
   return (
     <aside className="flex w-[280px] shrink-0 flex-col border-r border-border-default bg-background-panel">
@@ -18,9 +20,7 @@ function PreviewPanel() {
         <h2 className="text-lg font-semibold">Preview</h2>
       </div>
       <div className="flex flex-1 items-center justify-center">
-        <div className="rounded-xl border border-dashed border-border-default bg-background-upload px-8 py-6 text-center">
-          <p className="text-base font-medium">Preview panel</p>
-        </div>
+        <ImageUpload />
       </div>
     </section>
   );
