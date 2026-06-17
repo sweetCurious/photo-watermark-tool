@@ -5,7 +5,7 @@
 - [x] T001 Project Init
 - [x] T002 Layout
 - [x] T003 Image Upload
-- [ ] T004 Image Decode
+- [x] T004 Image Decode
 - [ ] T005 Preview
 
 ## Sprint 2
