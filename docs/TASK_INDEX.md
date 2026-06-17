@@ -6,7 +6,7 @@
 - [x] T002 Layout
 - [x] T003 Image Upload
 - [x] T004 Image Decode
-- [ ] T005 Preview
+- [x] T005 Preview
 
 ## Sprint 2
 

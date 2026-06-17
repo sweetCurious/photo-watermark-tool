@@ -1,4 +1,5 @@
-import { ImageUpload } from '../upload/ImageUpload';
+import { ImageList } from '../image/ImageList';
+import { ImagePreview } from '../image/ImagePreview';
 
 function LeftPanel() {
   return (
@@ -6,9 +7,7 @@ function LeftPanel() {
       <div className="border-b border-border-default px-5 py-4">
         <h2 className="text-lg font-semibold">Image List</h2>
       </div>
-      <div className="flex flex-1 items-center justify-center px-5 text-sm text-slate-500">
-        Image list panel
-      </div>
+      <ImageList />
     </aside>
   );
 }
@@ -20,7 +19,7 @@ function PreviewPanel() {
         <h2 className="text-lg font-semibold">Preview</h2>
       </div>
       <div className="flex flex-1 items-center justify-center">
-        <ImageUpload />
+        <ImagePreview />
       </div>
     </section>
   );
