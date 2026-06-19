@@ -13,7 +13,7 @@
 - [x] T006 Logo Upload
 - [x] T007 Canvas Generator
 - [x] T008 Blur Background
-- [ ] T009 Bottom Bar
+- [x] T009 Bottom Bar
 - [ ] T010 Logo Render
 
 ## Sprint 3
