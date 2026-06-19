@@ -18,7 +18,7 @@
 
 ## Sprint 3
 
-- [ ] T011 JPG Export
+- [x] T011 JPG Export
 - [ ] T012 ZIP Export
 - [ ] T013 Processing State
 - [ ] T014 Settings Panel
