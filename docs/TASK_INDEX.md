@@ -12,7 +12,7 @@
 
 - [x] T006 Logo Upload
 - [x] T007 Canvas Generator
-- [ ] T008 Blur Background
+- [x] T008 Blur Background
 - [ ] T009 Bottom Bar
 - [ ] T010 Logo Render
 
