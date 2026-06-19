@@ -2,7 +2,8 @@ import { useImageProcessing } from '../../hooks/useImageProcessing';
 import { DownloadButton } from '../actions/DownloadButton';
 
 export function Footer() {
-  const { exportedFiles, imageCount, isProcessing, progress, startProcessing } = useImageProcessing();
+  const { cancelProcessing, exportedFiles, imageCount, isProcessing, progress, startProcessing } =
+    useImageProcessing();
   const statusText = isProcessing ? 'Processing' : 'Ready';
   const progressText = progress.total > 0 ? `${progress.current} / ${progress.total}` : '0 / 0';
 
@@ -28,13 +29,18 @@ export function Footer() {
       <div className="flex items-center gap-3">
         <button
           className="h-10 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover disabled:bg-primary-disabled disabled:text-white"
-          disabled={imageCount === 0 || isProcessing}
+          disabled={imageCount === 0}
           onClick={() => {
+            if (isProcessing) {
+              cancelProcessing();
+              return;
+            }
+
             void startProcessing();
           }}
           type="button"
         >
-          Start Processing
+          {isProcessing ? 'Cancel Processing' : 'Start Processing'}
         </button>
         <DownloadButton files={exportedFiles} />
       </div>
