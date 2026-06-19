@@ -1,6 +1,9 @@
 import { create } from 'zustand';
+import { toast } from 'sonner';
 import { decodeImageFile } from '../services/imageDecodeService';
 import { UploadedImage, UploadedImageStatus } from '../types/image';
+
+const MEMORY_WARNING_SIZE = 30 * 1024 * 1024;
 
 interface ImageStore {
   images: UploadedImage[];
@@ -16,6 +19,13 @@ export const useImageStore = create<ImageStore>((set) => ({
   images: [],
   selectedImageId: null,
   addFiles: (files) => {
+    const hasLargeFile = files.some((file) => file.size > MEMORY_WARNING_SIZE);
+
+    if (hasLargeFile) {
+      console.error('Memory Limit Exceeded');
+      toast.warning('Memory Limit Exceeded');
+    }
+
     files.forEach((file) => {
       decodeImageFile(file)
         .then((image) =>
@@ -26,6 +36,7 @@ export const useImageStore = create<ImageStore>((set) => ({
         )
         .catch((error: unknown) => {
           console.error('Image Load Failed', error);
+          toast.error('Image Load Failed');
         });
     });
   },

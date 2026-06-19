@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useImageStore } from '../store/imageStore';
 import { UploadedImage } from '../types/image';
 
@@ -42,6 +43,8 @@ export function useImageProcessing() {
         updateImageStatus(image.id, 'success');
       } catch (error) {
         updateImageStatus(image.id, 'failed');
+        console.error('Processing Failed', error);
+        toast.error('Processing Failed');
         throw error;
       } finally {
         setProgress((currentProgress) => ({

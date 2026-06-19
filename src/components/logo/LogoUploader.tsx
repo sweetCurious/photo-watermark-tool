@@ -1,4 +1,5 @@
 import { ChangeEvent, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useLogoStore } from '../../store/logoStore';
 import { LogoAsset, LogoPosition } from '../../types/logo';
 
@@ -34,6 +35,8 @@ export function LogoUploader({ position }: { position: LogoPosition }) {
 
     if (!isValidLogo(file)) {
       setMessage('Invalid Logo');
+      console.error('Invalid Logo', file.name);
+      toast.error('Invalid Logo');
       return;
     }
 

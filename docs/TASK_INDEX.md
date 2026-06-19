@@ -22,7 +22,7 @@
 - [x] T012 ZIP Export
 - [x] T013 Processing State
 - [x] T014 Settings Panel
-- [ ] T015 Error Handling
+- [x] T015 Error Handling
 
 ## Sprint 4
 
