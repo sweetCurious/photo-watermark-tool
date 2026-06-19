@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { decodeImageFile } from '../services/imageDecodeService';
 import { UploadedImage, UploadedImageStatus } from '../types/image';
+import { revokeObjectUrl } from '../utils/memory';
 
 const MEMORY_WARNING_SIZE = 30 * 1024 * 1024;
 
@@ -44,9 +45,14 @@ export const useImageStore = create<ImageStore>((set) => ({
   removeImage: (id) =>
     set((state) => {
       const imageIndex = state.images.findIndex((image) => image.id === id);
+      const imageToRemove = state.images[imageIndex];
       const nextImages = state.images.filter((image) => image.id !== id);
       const shouldMoveSelection = state.selectedImageId === id;
       const nextSelectedImage = nextImages[imageIndex] ?? nextImages[imageIndex - 1] ?? null;
+
+      if (imageToRemove) {
+        revokeObjectUrl(imageToRemove.objectUrl);
+      }
 
       return {
         images: nextImages,
@@ -54,9 +60,13 @@ export const useImageStore = create<ImageStore>((set) => ({
       };
     }),
   clearImages: () =>
-    set({
-      images: [],
-      selectedImageId: null,
+    set((state) => {
+      state.images.forEach((image) => revokeObjectUrl(image.objectUrl));
+
+      return {
+        images: [],
+        selectedImageId: null,
+      };
     }),
   updateImageStatus: (id, status) =>
     set((state) => ({

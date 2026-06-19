@@ -1,6 +1,7 @@
 import { OUTPUT_IMAGE_SPECS } from '../constants/imageSpecs';
 import { GeneratedCanvas } from '../types/canvas';
 import { ImageOrientation } from '../types/image';
+import { releaseCanvas } from '../utils/memory';
 
 export function createOutputCanvas(orientation: ImageOrientation): GeneratedCanvas {
   const spec = OUTPUT_IMAGE_SPECS[orientation];
@@ -21,4 +22,8 @@ export function createOutputCanvas(orientation: ImageOrientation): GeneratedCanv
     width: spec.width,
     height: spec.height,
   };
+}
+
+export function releaseGeneratedCanvas(generatedCanvas: GeneratedCanvas) {
+  releaseCanvas(generatedCanvas.canvas);
 }
