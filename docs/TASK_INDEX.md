@@ -11,7 +11,7 @@
 ## Sprint 2
 
 - [x] T006 Logo Upload
-- [ ] T007 Canvas Generator
+- [x] T007 Canvas Generator
 - [ ] T008 Blur Background
 - [ ] T009 Bottom Bar
 - [ ] T010 Logo Render
