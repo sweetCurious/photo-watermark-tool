@@ -10,24 +10,24 @@
 
 ## Sprint 2
 
-- [ ] T006 Canvas Generator
-- [ ] T007 Blur Background
-- [ ] T008 Bottom Bar
-- [ ] T009 Logo Render
-- [ ] T010 JPG Export
+- [x] T006 Logo Upload
+- [ ] T007 Canvas Generator
+- [ ] T008 Blur Background
+- [ ] T009 Bottom Bar
+- [ ] T010 Logo Render
 
 ## Sprint 3
 
-- [ ] T011 ZIP Export
-- [ ] T012 Settings Panel
+- [ ] T011 JPG Export
+- [ ] T012 ZIP Export
 - [ ] T013 Processing State
-- [ ] T014 Error Handling
-- [ ] T015 Performance Optimization
+- [ ] T014 Settings Panel
+- [ ] T015 Error Handling
 
 ## Sprint 4
 
-- [ ] T016 UI Polish
-- [ ] T017 Browser Compatibility
+- [ ] T016 Performance Optimization
+- [ ] T017 UI Polish and Browser Compatibility
 - [ ] T018 Final Acceptance
 
 ## Development Rule

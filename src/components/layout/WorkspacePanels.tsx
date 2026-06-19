@@ -1,5 +1,6 @@
 import { ImageList } from '../image/ImageList';
 import { ImagePreview } from '../image/ImagePreview';
+import { LogoUploader } from '../logo/LogoUploader';
 
 function LeftPanel() {
   return (
@@ -31,8 +32,9 @@ function SettingsPanel() {
       <div className="border-b border-border-default px-5 py-4">
         <h2 className="text-lg font-semibold">Settings</h2>
       </div>
-      <div className="flex flex-1 items-center justify-center p-5 text-sm text-slate-500">
-        Settings panel
+      <div className="space-y-4 p-5">
+        <LogoUploader position="left" />
+        <LogoUploader position="right" />
       </div>
     </aside>
   );
