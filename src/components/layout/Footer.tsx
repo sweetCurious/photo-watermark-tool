@@ -1,7 +1,8 @@
 import { useImageProcessing } from '../../hooks/useImageProcessing';
+import { DownloadButton } from '../actions/DownloadButton';
 
 export function Footer() {
-  const { imageCount, isProcessing, progress, startProcessing } = useImageProcessing();
+  const { exportedFiles, imageCount, isProcessing, progress, startProcessing } = useImageProcessing();
   const statusText = isProcessing ? 'Processing' : 'Ready';
   const progressText = progress.total > 0 ? `${progress.current} / ${progress.total}` : '0 / 0';
 
@@ -35,13 +36,7 @@ export function Footer() {
         >
           Start Processing
         </button>
-        <button
-          className="h-10 rounded-lg border border-border-default bg-background-panel px-4 text-sm font-medium text-slate-500 hover:border-border-hover disabled:bg-background-upload disabled:text-slate-400"
-          disabled
-          type="button"
-        >
-          Download ZIP
-        </button>
+        <DownloadButton files={exportedFiles} />
       </div>
     </footer>
   );

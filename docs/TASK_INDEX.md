@@ -28,7 +28,7 @@
 
 - [x] T016 Performance Optimization
 - [x] T017 UI Polish and Browser Compatibility
-- [ ] T018 Final Acceptance
+- [x] T018 Final Acceptance
 
 ## Development Rule
 
