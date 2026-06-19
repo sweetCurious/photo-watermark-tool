@@ -26,7 +26,7 @@ export function Footer() {
       </div>
       <div className="flex items-center gap-3">
         <button
-          className="h-10 rounded-lg bg-primary px-4 text-sm font-medium text-white disabled:bg-primary-disabled"
+          className="h-10 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover disabled:bg-primary-disabled disabled:text-white"
           disabled={imageCount === 0 || isProcessing}
           onClick={() => {
             void startProcessing();
@@ -36,7 +36,7 @@ export function Footer() {
           Start Processing
         </button>
         <button
-          className="h-10 rounded-lg border border-border-default bg-background-panel px-4 text-sm font-medium text-slate-500"
+          className="h-10 rounded-lg border border-border-default bg-background-panel px-4 text-sm font-medium text-slate-500 hover:border-border-hover disabled:bg-background-upload disabled:text-slate-400"
           disabled
           type="button"
         >

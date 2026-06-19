@@ -22,7 +22,7 @@ function ImageItem({
         isSelected ? 'border-primary bg-blue-50' : 'border-border-default bg-background-panel'
       }`}
     >
-      <button className="w-full text-left" onClick={onSelect} type="button">
+      <button className="w-full rounded-lg text-left" onClick={onSelect} type="button">
         <img
           alt={image.fileName}
           className="h-28 w-full rounded-lg object-cover"
@@ -42,7 +42,7 @@ function ImageItem({
         </div>
       </button>
       <button
-        className="mt-2 h-8 w-full rounded-md border border-error text-xs font-medium text-error"
+        className="mt-2 h-8 w-full rounded-md border border-error text-xs font-medium text-error hover:bg-red-50"
         onClick={onRemove}
         type="button"
       >
@@ -80,7 +80,7 @@ export function ImageList() {
       </div>
       <div className="border-t border-border-default p-4">
         <button
-          className="h-10 w-full rounded-lg border border-error text-sm font-medium text-error disabled:opacity-50"
+          className="h-10 w-full rounded-lg border border-error text-sm font-medium text-error hover:bg-red-50 disabled:bg-background-upload disabled:opacity-50"
           disabled={images.length === 0}
           onClick={clearImages}
           type="button"

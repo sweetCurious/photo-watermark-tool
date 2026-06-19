@@ -59,7 +59,7 @@ export function LogoUploader({ position }: { position: LogoPosition }) {
           type="file"
         />
         <button
-          className="h-10 rounded-lg bg-primary px-4 text-sm font-medium text-white"
+          className="h-10 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover"
           onClick={() => inputRef.current?.click()}
           type="button"
         >
@@ -70,7 +70,7 @@ export function LogoUploader({ position }: { position: LogoPosition }) {
         <>
           <LogoPreview logo={logo} />
           <button
-            className="mt-3 h-9 w-full rounded-lg border border-error text-sm font-medium text-error"
+            className="mt-3 h-9 w-full rounded-lg border border-error text-sm font-medium text-error hover:bg-red-50"
             onClick={() => removeLogo(position)}
             type="button"
           >

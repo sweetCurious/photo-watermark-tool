@@ -27,7 +27,7 @@
 ## Sprint 4
 
 - [x] T016 Performance Optimization
-- [ ] T017 UI Polish and Browser Compatibility
+- [x] T017 UI Polish and Browser Compatibility
 - [ ] T018 Final Acceptance
 
 ## Development Rule
