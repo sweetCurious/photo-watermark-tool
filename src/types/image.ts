@@ -1,6 +1,6 @@
 export type ImageOrientation = 'portrait' | 'landscape';
 
-export type UploadedImageStatus = 'ready';
+export type UploadedImageStatus = 'ready' | 'processing' | 'success' | 'failed';
 
 export interface UploadedImage {
   id: string;

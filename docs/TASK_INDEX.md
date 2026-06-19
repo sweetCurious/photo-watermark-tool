@@ -20,7 +20,7 @@
 
 - [x] T011 JPG Export
 - [x] T012 ZIP Export
-- [ ] T013 Processing State
+- [x] T013 Processing State
 - [ ] T014 Settings Panel
 - [ ] T015 Error Handling
 

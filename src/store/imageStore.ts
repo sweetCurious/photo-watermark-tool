@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { decodeImageFile } from '../services/imageDecodeService';
-import { UploadedImage } from '../types/image';
+import { UploadedImage, UploadedImageStatus } from '../types/image';
 
 interface ImageStore {
   images: UploadedImage[];
@@ -9,6 +9,7 @@ interface ImageStore {
   selectImage: (id: string) => void;
   removeImage: (id: string) => void;
   clearImages: () => void;
+  updateImageStatus: (id: string, status: UploadedImageStatus) => void;
 }
 
 export const useImageStore = create<ImageStore>((set) => ({
@@ -46,4 +47,8 @@ export const useImageStore = create<ImageStore>((set) => ({
       images: [],
       selectedImageId: null,
     }),
+  updateImageStatus: (id, status) =>
+    set((state) => ({
+      images: state.images.map((image) => (image.id === id ? { ...image, status } : image)),
+    })),
 }));
