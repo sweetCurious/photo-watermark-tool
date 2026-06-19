@@ -21,7 +21,7 @@
 - [x] T011 JPG Export
 - [x] T012 ZIP Export
 - [x] T013 Processing State
-- [ ] T014 Settings Panel
+- [x] T014 Settings Panel
 - [ ] T015 Error Handling
 
 ## Sprint 4
