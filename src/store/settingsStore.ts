@@ -17,6 +17,7 @@ export interface WatermarkSettings {
 export interface LogoSettings {
   sizeRatio: number;
   opacity: number;
+  removeBackground: boolean;
 }
 
 export interface TemplateSettings {
@@ -35,6 +36,7 @@ const DEFAULT_TEMPLATE: TemplateSettings = {
   logo: {
     sizeRatio: 0.6,
     opacity: 1,
+    removeBackground: true,
   },
   watermark: {
     barHeightRatio: BOTTOM_BAR_HEIGHT_RATIO,

@@ -127,6 +127,28 @@ function RangeInput({
   );
 }
 
+function CheckboxInput({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center justify-between gap-3 text-sm text-slate-500">
+      <span>{label}</span>
+      <input
+        checked={checked}
+        className="h-4 w-4 accent-primary"
+        onChange={(event) => onChange(event.target.checked)}
+        type="checkbox"
+      />
+    </label>
+  );
+}
+
 function TemplateCard({ selectedTemplate }: { selectedTemplate: ImageOrientation }) {
   const template = useSettingsStore((state) => state.templates[selectedTemplate]);
   const setTemplate = useSettingsStore((state) => state.setTemplate);
@@ -157,6 +179,13 @@ function TemplateCard({ selectedTemplate }: { selectedTemplate: ImageOrientation
         max={100}
         onChange={(value) => updateTemplate({ logo: { ...template.logo, opacity: value / 100 } })}
         value={Math.round(template.logo.opacity * 100)}
+      />
+      <CheckboxInput
+        checked={template.logo.removeBackground}
+        label="Logo 背景透明化"
+        onChange={(checked) =>
+          updateTemplate({ logo: { ...template.logo, removeBackground: checked } })
+        }
       />
       <RangeInput
         label="底栏高度"
