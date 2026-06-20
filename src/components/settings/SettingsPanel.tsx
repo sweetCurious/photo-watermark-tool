@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { JPG_QUALITY } from '../../services/exportService';
-import { useSettingsStore, WatermarkSettings } from '../../store/settingsStore';
+import { TemplateSettings, useSettingsStore } from '../../store/settingsStore';
 import { ImageOrientation } from '../../types/image';
 import { LogoUploader } from '../logo/LogoUploader';
 
@@ -38,96 +38,151 @@ function NumberInput({
   );
 }
 
-function ExportCard() {
+function TemplateTabs({
+  selectedTemplate,
+  setSelectedTemplate,
+}: {
+  selectedTemplate: ImageOrientation;
+  setSelectedTemplate: (orientation: ImageOrientation) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {[
+        ['portrait', '竖图模板'],
+        ['landscape', '横图模板'],
+      ].map(([orientation, label]) => (
+        <button
+          className={`h-9 rounded-lg border text-sm font-medium ${
+            selectedTemplate === orientation
+              ? 'border-primary bg-primary text-white'
+              : 'border-border-default bg-background-panel text-slate-600 hover:border-border-hover'
+          }`}
+          key={orientation}
+          onClick={() => setSelectedTemplate(orientation as ImageOrientation)}
+          type="button"
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ExportCard({ selectedTemplate }: { selectedTemplate: ImageOrientation }) {
   const outputSizes = useSettingsStore((state) => state.outputSizes);
   const setOutputSize = useSettingsStore((state) => state.setOutputSize);
-
-  function updateSize(orientation: ImageOrientation, key: 'width' | 'height', value: number) {
-    setOutputSize(orientation, {
-      ...outputSizes[orientation],
-      [key]: value,
-    });
-  }
+  const label = selectedTemplate === 'portrait' ? '竖图' : '横图';
 
   return (
     <SettingsCard title="导出尺寸">
-      <div className="space-y-3">
-        <p className="text-xs text-slate-500">默认使用小红书横图 / 竖图全屏尺寸，可自由修改。</p>
-        <div className="rounded-lg bg-background-upload p-3">
-          <p className="mb-2 text-sm font-medium text-slate-950">竖图</p>
-          <NumberInput
-            label="宽度"
-            min={320}
-            onChange={(value) => updateSize('portrait', 'width', value)}
-            value={outputSizes.portrait.width}
-          />
-          <NumberInput
-            label="高度"
-            min={320}
-            onChange={(value) => updateSize('portrait', 'height', value)}
-            value={outputSizes.portrait.height}
-          />
-        </div>
-        <div className="rounded-lg bg-background-upload p-3">
-          <p className="mb-2 text-sm font-medium text-slate-950">横图</p>
-          <NumberInput
-            label="宽度"
-            min={320}
-            onChange={(value) => updateSize('landscape', 'width', value)}
-            value={outputSizes.landscape.width}
-          />
-          <NumberInput
-            label="高度"
-            min={320}
-            onChange={(value) => updateSize('landscape', 'height', value)}
-            value={outputSizes.landscape.height}
-          />
-        </div>
+      <p className="text-xs text-slate-500">当前编辑：{label}模板</p>
+      <div className="rounded-lg bg-background-upload p-3">
+        <p className="mb-2 text-sm font-medium text-slate-950">{label}</p>
+        <NumberInput
+          label="宽度"
+          min={320}
+          onChange={(value) =>
+            setOutputSize(selectedTemplate, { ...outputSizes[selectedTemplate], width: value })
+          }
+          value={outputSizes[selectedTemplate].width}
+        />
+        <NumberInput
+          label="高度"
+          min={320}
+          onChange={(value) =>
+            setOutputSize(selectedTemplate, { ...outputSizes[selectedTemplate], height: value })
+          }
+          value={outputSizes[selectedTemplate].height}
+        />
       </div>
     </SettingsCard>
   );
 }
 
-function WatermarkCard() {
-  const watermark = useSettingsStore((state) => state.watermark);
-  const setWatermark = useSettingsStore((state) => state.setWatermark);
-  const updateWatermark = (settings: Partial<WatermarkSettings>) =>
-    setWatermark({
-      ...watermark,
+function RangeInput({
+  label,
+  max,
+  onChange,
+  value,
+}: {
+  label: string;
+  max: number;
+  onChange: (value: number) => void;
+  value: number;
+}) {
+  return (
+    <label className="block text-sm text-slate-500">
+      <span>
+        {label} {value}%
+      </span>
+      <input
+        className="mt-2 w-full accent-primary"
+        max={max}
+        min={0}
+        onChange={(event) => onChange(Number(event.target.value))}
+        type="range"
+        value={value}
+      />
+    </label>
+  );
+}
+
+function TemplateCard({ selectedTemplate }: { selectedTemplate: ImageOrientation }) {
+  const template = useSettingsStore((state) => state.templates[selectedTemplate]);
+  const setTemplate = useSettingsStore((state) => state.setTemplate);
+  const updateTemplate = (settings: Partial<TemplateSettings>) =>
+    setTemplate(selectedTemplate, {
+      ...template,
       ...settings,
+      logo: {
+        ...template.logo,
+        ...settings.logo,
+      },
+      watermark: {
+        ...template.watermark,
+        ...settings.watermark,
+      },
     });
 
   return (
-    <SettingsCard title="水印底栏">
-      <label className="block text-sm text-slate-500">
-        <span>底栏高度 {Math.round(watermark.barHeightRatio * 100)}%</span>
-        <input
-          className="mt-2 w-full accent-primary"
-          max={30}
-          min={0}
-          onChange={(event) => updateWatermark({ barHeightRatio: Number(event.target.value) / 100 })}
-          type="range"
-          value={Math.round(watermark.barHeightRatio * 100)}
-        />
-      </label>
-      <label className="block text-sm text-slate-500">
-        <span>透明度 {Math.round(watermark.opacity * 100)}%</span>
-        <input
-          className="mt-2 w-full accent-primary"
-          max={100}
-          min={0}
-          onChange={(event) => updateWatermark({ opacity: Number(event.target.value) / 100 })}
-          type="range"
-          value={Math.round(watermark.opacity * 100)}
-        />
-      </label>
+    <SettingsCard title="模板水印">
+      <RangeInput
+        label="Logo 大小"
+        max={120}
+        onChange={(value) => updateTemplate({ logo: { ...template.logo, sizeRatio: value / 100 } })}
+        value={Math.round(template.logo.sizeRatio * 100)}
+      />
+      <RangeInput
+        label="Logo 透明度"
+        max={100}
+        onChange={(value) => updateTemplate({ logo: { ...template.logo, opacity: value / 100 } })}
+        value={Math.round(template.logo.opacity * 100)}
+      />
+      <RangeInput
+        label="底栏高度"
+        max={30}
+        onChange={(value) =>
+          updateTemplate({ watermark: { ...template.watermark, barHeightRatio: value / 100 } })
+        }
+        value={Math.round(template.watermark.barHeightRatio * 100)}
+      />
+      <RangeInput
+        label="底栏透明度"
+        max={100}
+        onChange={(value) =>
+          updateTemplate({ watermark: { ...template.watermark, opacity: value / 100 } })
+        }
+        value={Math.round(template.watermark.opacity * 100)}
+      />
       <label className="flex items-center justify-between gap-3 text-sm text-slate-500">
-        <span>背景颜色</span>
+        <span>底栏颜色</span>
         <input
           className="h-9 w-16 rounded-md border border-border-default"
-          onChange={(event) => updateWatermark({ background: event.target.value })}
+          onChange={(event) =>
+            updateTemplate({ watermark: { ...template.watermark, background: event.target.value } })
+          }
           type="color"
-          value={watermark.background}
+          value={template.watermark.background}
         />
       </label>
     </SettingsCard>
@@ -154,6 +209,8 @@ function OutputCard() {
 }
 
 export function SettingsPanel() {
+  const [selectedTemplate, setSelectedTemplate] = useState<ImageOrientation>('portrait');
+
   return (
     <aside className="flex w-[360px] shrink-0 flex-col border-l border-border-default bg-background-panel">
       <div className="border-b border-border-default px-5 py-4">
@@ -163,8 +220,14 @@ export function SettingsPanel() {
         <SettingsCard title="品牌标识设置">
           <LogoUploader />
         </SettingsCard>
-        <ExportCard />
-        <WatermarkCard />
+        <SettingsCard title="模板">
+          <TemplateTabs
+            selectedTemplate={selectedTemplate}
+            setSelectedTemplate={setSelectedTemplate}
+          />
+        </SettingsCard>
+        <ExportCard selectedTemplate={selectedTemplate} />
+        <TemplateCard selectedTemplate={selectedTemplate} />
         <OutputCard />
       </div>
     </aside>

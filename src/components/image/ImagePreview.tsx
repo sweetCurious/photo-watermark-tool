@@ -14,7 +14,7 @@ export function ImagePreview() {
   const selectedImageId = useImageStore((state) => state.selectedImageId);
   const logos = useLogoStore((state) => state.logos);
   const outputSizes = useSettingsStore((state) => state.outputSizes);
-  const watermark = useSettingsStore((state) => state.watermark);
+  const templates = useSettingsStore((state) => state.templates);
   const selectedImage = images.find((image) => image.id === selectedImageId) ?? null;
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export function ImagePreview() {
           currentImage,
           drawableLogos,
           outputSizes[currentImage.orientation],
-          watermark,
+          templates[currentImage.orientation],
           abortController.signal,
         );
 
@@ -76,7 +76,7 @@ export function ImagePreview() {
         revokeObjectUrl(nextPreviewUrl);
       }
     };
-  }, [logos, outputSizes, selectedImage, watermark]);
+  }, [logos, outputSizes, selectedImage, templates]);
 
   if (!selectedImage) {
     return <ImageUpload />;

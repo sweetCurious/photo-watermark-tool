@@ -14,19 +14,40 @@ export interface WatermarkSettings {
   background: string;
 }
 
-interface SettingsStore {
-  outputSizes: Record<ImageOrientation, OutputSize>;
-  watermark: WatermarkSettings;
-  setOutputSize: (orientation: ImageOrientation, size: OutputSize) => void;
-  setWatermark: (watermark: WatermarkSettings) => void;
+export interface LogoSettings {
+  sizeRatio: number;
+  opacity: number;
 }
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
-  outputSizes: OUTPUT_IMAGE_SPECS,
+export interface TemplateSettings {
+  logo: LogoSettings;
+  watermark: WatermarkSettings;
+}
+
+interface SettingsStore {
+  outputSizes: Record<ImageOrientation, OutputSize>;
+  templates: Record<ImageOrientation, TemplateSettings>;
+  setOutputSize: (orientation: ImageOrientation, size: OutputSize) => void;
+  setTemplate: (orientation: ImageOrientation, template: TemplateSettings) => void;
+}
+
+const DEFAULT_TEMPLATE: TemplateSettings = {
+  logo: {
+    sizeRatio: 0.6,
+    opacity: 1,
+  },
   watermark: {
     barHeightRatio: BOTTOM_BAR_HEIGHT_RATIO,
     opacity: 0.3,
     background: '#000000',
+  },
+};
+
+export const useSettingsStore = create<SettingsStore>((set) => ({
+  outputSizes: OUTPUT_IMAGE_SPECS,
+  templates: {
+    landscape: DEFAULT_TEMPLATE,
+    portrait: DEFAULT_TEMPLATE,
   },
   setOutputSize: (orientation, size) =>
     set((state) => ({
@@ -35,5 +56,11 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         [orientation]: size,
       },
     })),
-  setWatermark: (watermark) => set({ watermark }),
+  setTemplate: (orientation, template) =>
+    set((state) => ({
+      templates: {
+        ...state.templates,
+        [orientation]: template,
+      },
+    })),
 }));

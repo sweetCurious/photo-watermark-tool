@@ -3,7 +3,7 @@ import { createOutputCanvas } from './canvasService';
 import { exportCanvasToJpg, JpgExportResult } from './exportService';
 import { DrawableLogo, renderLogos } from './logoRenderer';
 import { renderBottomBar } from './watermarkRenderer';
-import type { OutputSize, WatermarkSettings } from '../store/settingsStore';
+import type { OutputSize, TemplateSettings } from '../store/settingsStore';
 import { UploadedImage, UploadedImageStatus } from '../types/image';
 import { LogoAsset } from '../types/logo';
 import { releaseCanvas } from '../utils/memory';
@@ -22,7 +22,7 @@ interface ProcessImagesParams {
   images: UploadedImage[];
   logos: LogoAsset[];
   outputSizes: Record<UploadedImage['orientation'], OutputSize>;
-  watermark: WatermarkSettings;
+  templates: Record<UploadedImage['orientation'], TemplateSettings>;
   signal: AbortSignal;
   onImageError: (error: unknown) => void;
   onImageStatus: (id: string, status: UploadedImageStatus) => void;
@@ -98,7 +98,7 @@ export async function renderProcessedCanvas(
   image: UploadedImage,
   logos: DrawableLogo[],
   outputSize: OutputSize,
-  watermark: WatermarkSettings,
+  template: TemplateSettings,
   signal: AbortSignal,
 ): Promise<HTMLCanvasElement> {
   throwIfCanceled(signal);
@@ -112,8 +112,8 @@ export async function renderProcessedCanvas(
       width: sourceImage.width,
       height: sourceImage.height,
     });
-    const bottomBar = renderBottomBar(generatedCanvas, watermark);
-    renderLogos(generatedCanvas, bottomBar, logos);
+    const bottomBar = renderBottomBar(generatedCanvas, template.watermark);
+    renderLogos(generatedCanvas, bottomBar, logos, template.logo);
     throwIfCanceled(signal);
     return generatedCanvas.canvas;
   } finally {
@@ -129,7 +129,7 @@ export async function processImages({
   onProgress,
   outputSizes,
   signal,
-  watermark,
+  templates,
 }: ProcessImagesParams): Promise<JpgExportResult[]> {
   let nextIndex = 0;
   const exportedFiles: JpgExportResult[] = [];
@@ -148,7 +148,7 @@ export async function processImages({
           image,
           drawableLogos,
           outputSizes[image.orientation],
-          watermark,
+          templates[image.orientation],
           signal,
         );
         try {

@@ -1,6 +1,7 @@
 import { BottomBarRect } from './watermarkRenderer';
 import { GeneratedCanvas } from '../types/canvas';
-import { LOGO_HEIGHT_RATIO, LOGO_MARGIN } from '../utils/logoScale';
+import { LOGO_MARGIN } from '../utils/logoScale';
+import type { LogoSettings } from '../store/settingsStore';
 
 export interface DrawableLogo {
   image: CanvasImageSource;
@@ -15,8 +16,12 @@ interface LogoRect {
   height: number;
 }
 
-function getLogoRects(logos: DrawableLogo[], bottomBar: BottomBarRect): LogoRect[] {
-  const logoHeight = bottomBar.height * LOGO_HEIGHT_RATIO;
+function getLogoRects(
+  logos: DrawableLogo[],
+  bottomBar: BottomBarRect,
+  settings: LogoSettings,
+): LogoRect[] {
+  const logoHeight = bottomBar.height * settings.sizeRatio;
   const rects = logos.map((logo) => ({
     x: 0,
     y: bottomBar.y + (bottomBar.height - logoHeight) / 2,
@@ -46,12 +51,16 @@ export function renderLogos(
   generatedCanvas: GeneratedCanvas,
   bottomBar: BottomBarRect,
   logos: DrawableLogo[],
+  settings: LogoSettings,
 ) {
-  const rects = getLogoRects(logos, bottomBar);
+  const rects = getLogoRects(logos, bottomBar, settings);
 
+  generatedCanvas.context.save();
+  generatedCanvas.context.globalAlpha = settings.opacity;
   rects.forEach((rect, index) => {
     generatedCanvas.context.drawImage(logos[index].image, rect.x, rect.y, rect.width, rect.height);
   });
+  generatedCanvas.context.restore();
 
   return rects;
 }

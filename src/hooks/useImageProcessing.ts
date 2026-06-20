@@ -16,7 +16,7 @@ export function useImageProcessing() {
   const updateImageStatus = useImageStore((state) => state.updateImageStatus);
   const logos = useLogoStore((state) => state.logos);
   const outputSizes = useSettingsStore((state) => state.outputSizes);
-  const watermark = useSettingsStore((state) => state.watermark);
+  const templates = useSettingsStore((state) => state.templates);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<ProcessingProgress>({ current: 0, total: 0 });
@@ -42,7 +42,7 @@ export function useImageProcessing() {
         images,
         logos,
         outputSizes,
-        watermark,
+        templates,
         signal: abortController.signal,
         onImageStatus: updateImageStatus,
         onProgress: () =>
