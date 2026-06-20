@@ -1,12 +1,82 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { createDrawableLogos, renderProcessedCanvas } from '../../services/imageProcessingService';
 import { useImageStore } from '../../store/imageStore';
+import { useLogoStore } from '../../store/logoStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import { releaseCanvas, revokeObjectUrl } from '../../utils/memory';
 import { ImageUpload } from '../upload/ImageUpload';
 
 export function ImagePreview() {
   const [previewScale, setPreviewScale] = useState(55);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const images = useImageStore((state) => state.images);
   const selectedImageId = useImageStore((state) => state.selectedImageId);
+  const logos = useLogoStore((state) => state.logos);
+  const outputSizes = useSettingsStore((state) => state.outputSizes);
+  const watermark = useSettingsStore((state) => state.watermark);
   const selectedImage = images.find((image) => image.id === selectedImageId) ?? null;
+
+  useEffect(() => {
+    if (!selectedImage) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const currentImage = selectedImage;
+    const abortController = new AbortController();
+    let nextPreviewUrl: string | null = null;
+
+    async function renderPreview() {
+      let drawableLogos: Awaited<ReturnType<typeof createDrawableLogos>> = [];
+
+      try {
+        drawableLogos = await createDrawableLogos(logos, abortController.signal);
+        const canvas = await renderProcessedCanvas(
+          currentImage,
+          drawableLogos,
+          outputSizes[currentImage.orientation],
+          watermark,
+          abortController.signal,
+        );
+
+        canvas.toBlob((blob) => {
+          drawableLogos.forEach((logo) => logo.dispose());
+          releaseCanvas(canvas);
+
+          if (!blob || abortController.signal.aborted) {
+            return;
+          }
+
+          nextPreviewUrl = URL.createObjectURL(blob);
+          setPreviewUrl((currentUrl) => {
+            if (currentUrl) {
+              revokeObjectUrl(currentUrl);
+            }
+
+            return nextPreviewUrl;
+          });
+        }, 'image/jpeg', 0.9);
+      } catch (error) {
+        drawableLogos.forEach((logo) => logo.dispose());
+
+        if (!abortController.signal.aborted) {
+          console.error('Preview Render Failed', error);
+          toast.error('预览生成失败');
+        }
+      }
+    }
+
+    void renderPreview();
+
+    return () => {
+      abortController.abort();
+
+      if (nextPreviewUrl) {
+        revokeObjectUrl(nextPreviewUrl);
+      }
+    };
+  }, [logos, outputSizes, selectedImage, watermark]);
 
   if (!selectedImage) {
     return <ImageUpload />;
@@ -37,7 +107,7 @@ export function ImagePreview() {
           <img
             alt={selectedImage.fileName}
             className="object-contain"
-            src={selectedImage.objectUrl}
+            src={previewUrl ?? selectedImage.objectUrl}
             style={{
               maxHeight: `${previewScale}%`,
               maxWidth: `${previewScale}%`,

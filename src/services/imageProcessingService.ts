@@ -1,11 +1,12 @@
 import { renderBlurBackground } from './backgroundRenderer';
-import { createOutputCanvas, releaseGeneratedCanvas } from './canvasService';
+import { createOutputCanvas } from './canvasService';
 import { exportCanvasToJpg, JpgExportResult } from './exportService';
 import { DrawableLogo, renderLogos } from './logoRenderer';
 import { renderBottomBar } from './watermarkRenderer';
 import type { OutputSize, WatermarkSettings } from '../store/settingsStore';
 import { UploadedImage, UploadedImageStatus } from '../types/image';
 import { LogoAsset } from '../types/logo';
+import { releaseCanvas } from '../utils/memory';
 
 const MAX_CONCURRENT_IMAGES = 3;
 const CANCELED_ERROR = 'Processing Canceled';
@@ -77,7 +78,7 @@ async function createDrawableImage(file: File, objectUrl: string): Promise<Drawa
   return createImageElementDrawable(image);
 }
 
-async function createDrawableLogos(logos: LogoAsset[], signal: AbortSignal) {
+export async function createDrawableLogos(logos: LogoAsset[], signal: AbortSignal) {
   const drawableLogos: DrawableImage[] = [];
 
   try {
@@ -93,13 +94,13 @@ async function createDrawableLogos(logos: LogoAsset[], signal: AbortSignal) {
   }
 }
 
-async function processImage(
+export async function renderProcessedCanvas(
   image: UploadedImage,
   logos: DrawableLogo[],
   outputSize: OutputSize,
   watermark: WatermarkSettings,
   signal: AbortSignal,
-): Promise<JpgExportResult> {
+): Promise<HTMLCanvasElement> {
   throwIfCanceled(signal);
 
   const sourceImage = await createDrawableImage(image.file, image.objectUrl);
@@ -114,10 +115,9 @@ async function processImage(
     const bottomBar = renderBottomBar(generatedCanvas, watermark);
     renderLogos(generatedCanvas, bottomBar, logos);
     throwIfCanceled(signal);
-    return await exportCanvasToJpg(generatedCanvas.canvas, image.fileName);
+    return generatedCanvas.canvas;
   } finally {
     sourceImage.dispose();
-    releaseGeneratedCanvas(generatedCanvas);
   }
 }
 
@@ -144,14 +144,19 @@ export async function processImages({
       onImageStatus(image.id, 'processing');
 
       try {
-        const exportedFile = await processImage(
+        const canvas = await renderProcessedCanvas(
           image,
           drawableLogos,
           outputSizes[image.orientation],
           watermark,
           signal,
         );
-        exportedFiles.push(exportedFile);
+        try {
+          const exportedFile = await exportCanvasToJpg(canvas, image.fileName);
+          exportedFiles.push(exportedFile);
+        } finally {
+          releaseCanvas(canvas);
+        }
         onImageStatus(image.id, 'success');
       } catch (error) {
         onImageStatus(image.id, isCanceled(error) ? 'ready' : 'failed');
