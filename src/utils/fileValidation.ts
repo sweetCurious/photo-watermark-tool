@@ -11,7 +11,7 @@ function getFileExtension(fileName: string) {
 
 export function validateImageFiles(files: File[], existingCount: number): FileValidationResult {
   if (files.length === 0) {
-    return { isValid: false, message: 'No files selected.' };
+    return { isValid: false, message: '未选择文件。' };
   }
 
   if (existingCount + files.length > MAX_IMAGE_COUNT) {
