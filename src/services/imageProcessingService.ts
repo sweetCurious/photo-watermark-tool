@@ -79,12 +79,16 @@ async function createDrawableImage(file: File, objectUrl: string): Promise<Drawa
 }
 
 export async function createDrawableLogos(logos: LogoAsset[], signal: AbortSignal) {
-  const drawableLogos: DrawableImage[] = [];
+  const drawableLogos: DrawableLogo[] = [];
 
   try {
     for (const logo of logos) {
       throwIfCanceled(signal);
-      drawableLogos.push(await createDrawableImage(logo.file, logo.objectUrl));
+      const drawableLogo = await createDrawableImage(logo.file, logo.objectUrl);
+      drawableLogos.push({
+        ...drawableLogo,
+        id: logo.id,
+      });
     }
 
     return drawableLogos;

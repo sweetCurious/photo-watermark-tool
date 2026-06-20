@@ -14,10 +14,16 @@ export interface WatermarkSettings {
   background: string;
 }
 
+export interface LogoPosition {
+  xRatio: number;
+  yRatio: number;
+}
+
 export interface LogoSettings {
   sizeRatio: number;
   opacity: number;
   removeBackground: boolean;
+  positions: Record<string, LogoPosition>;
 }
 
 export interface TemplateSettings {
@@ -37,6 +43,7 @@ const DEFAULT_TEMPLATE: TemplateSettings = {
     sizeRatio: 0.6,
     opacity: 1,
     removeBackground: true,
+    positions: {},
   },
   watermark: {
     barHeightRatio: BOTTOM_BAR_HEIGHT_RATIO,

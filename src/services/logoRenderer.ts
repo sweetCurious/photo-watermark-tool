@@ -4,12 +4,15 @@ import { LOGO_MARGIN } from '../utils/logoScale';
 import type { LogoSettings } from '../store/settingsStore';
 
 export interface DrawableLogo {
+  dispose: () => void;
+  id: string;
   image: CanvasImageSource;
   width: number;
   height: number;
 }
 
-interface LogoRect {
+export interface LogoRect {
+  id: string;
   x: number;
   y: number;
   width: number;
@@ -59,7 +62,7 @@ function getCornerBackgroundColor(data: Uint8ClampedArray, width: number, height
   };
 }
 
-function createTransparentLogo(logo: DrawableLogo): HTMLCanvasElement {
+export function createLogoCanvas(logo: DrawableLogo, removeBackground: boolean): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
 
@@ -71,6 +74,10 @@ function createTransparentLogo(logo: DrawableLogo): HTMLCanvasElement {
   }
 
   context.drawImage(logo.image, 0, 0, logo.width, logo.height);
+
+  if (!removeBackground) {
+    return canvas;
+  }
 
   const imageData = context.getImageData(0, 0, logo.width, logo.height);
   const backgroundColor = getCornerBackgroundColor(imageData.data, logo.width, logo.height);
@@ -99,13 +106,19 @@ function createTransparentLogo(logo: DrawableLogo): HTMLCanvasElement {
   return canvas;
 }
 
-function getLogoRects(
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+export function getLogoRects(
   logos: DrawableLogo[],
   bottomBar: BottomBarRect,
   settings: LogoSettings,
+  canvasSize: { height: number; width: number },
 ): LogoRect[] {
   const logoHeight = bottomBar.height * settings.sizeRatio;
   const rects = logos.map((logo) => ({
+    id: logo.id,
     x: 0,
     y: bottomBar.y + (bottomBar.height - logoHeight) / 2,
     width: logo.width * (logoHeight / logo.height),
@@ -118,6 +131,16 @@ function getLogoRects(
   let nextX = LOGO_MARGIN;
 
   return rects.map((rect) => {
+    const position = settings.positions[rect.id];
+
+    if (position) {
+      return {
+        ...rect,
+        x: clamp(position.xRatio * canvasSize.width, 0, canvasSize.width - rect.width),
+        y: clamp(position.yRatio * canvasSize.height, 0, canvasSize.height - rect.height),
+      };
+    }
+
     const nextRect = {
       ...rect,
       x: nextX,
@@ -136,12 +159,15 @@ export function renderLogos(
   logos: DrawableLogo[],
   settings: LogoSettings,
 ) {
-  const rects = getLogoRects(logos, bottomBar, settings);
+  const rects = getLogoRects(logos, bottomBar, settings, {
+    height: generatedCanvas.height,
+    width: generatedCanvas.width,
+  });
 
   generatedCanvas.context.save();
   generatedCanvas.context.globalAlpha = settings.opacity;
   rects.forEach((rect, index) => {
-    const logoImage = settings.removeBackground ? createTransparentLogo(logos[index]) : logos[index].image;
+    const logoImage = createLogoCanvas(logos[index], settings.removeBackground);
     generatedCanvas.context.drawImage(logoImage, rect.x, rect.y, rect.width, rect.height);
   });
   generatedCanvas.context.restore();
