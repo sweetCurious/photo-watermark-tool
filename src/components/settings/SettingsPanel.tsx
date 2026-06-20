@@ -1,83 +1,135 @@
 import { ReactNode } from 'react';
-import { OUTPUT_IMAGE_SPECS } from '../../constants/imageSpecs';
-import { BOTTOM_BAR_HEIGHT_RATIO } from '../../constants/watermarkSpecs';
 import { JPG_QUALITY } from '../../services/exportService';
+import { useSettingsStore, WatermarkSettings } from '../../store/settingsStore';
+import { ImageOrientation } from '../../types/image';
 import { LogoUploader } from '../logo/LogoUploader';
-
-interface ReadonlyRow {
-  label: string;
-  value: string;
-}
 
 function SettingsCard({ children, title }: { children: ReactNode; title: string }) {
   return (
     <section className="rounded-lg border border-border-default bg-background-panel p-4">
       <h3 className="text-base font-semibold text-slate-950">{title}</h3>
-      <div className="mt-4 space-y-3">{children}</div>
+      <div className="mt-4 space-y-4">{children}</div>
     </section>
   );
 }
 
-function ReadonlyInfoList({ rows }: { rows: ReadonlyRow[] }) {
+function NumberInput({
+  label,
+  min,
+  onChange,
+  value,
+}: {
+  label: string;
+  min: number;
+  onChange: (value: number) => void;
+  value: number;
+}) {
   return (
-    <dl className="space-y-3">
-      {rows.map((row) => (
-        <div className="flex items-center justify-between gap-4 text-sm" key={row.label}>
-          <dt className="text-slate-500">{row.label}</dt>
-          <dd className="font-medium text-slate-950">{row.value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function LogoSettingsCard() {
-  return (
-    <SettingsCard title="品牌标识设置">
-      <LogoUploader position="left" />
-      <LogoUploader position="right" />
-    </SettingsCard>
+    <label className="flex items-center justify-between gap-3 text-sm">
+      <span className="text-slate-500">{label}</span>
+      <input
+        className="h-9 w-28 rounded-md border border-border-default px-2 text-right"
+        min={min}
+        onChange={(event) => onChange(Number(event.target.value))}
+        type="number"
+        value={value}
+      />
+    </label>
   );
 }
 
 function ExportCard() {
+  const outputSizes = useSettingsStore((state) => state.outputSizes);
+  const setOutputSize = useSettingsStore((state) => state.setOutputSize);
+
+  function updateSize(orientation: ImageOrientation, key: 'width' | 'height', value: number) {
+    setOutputSize(orientation, {
+      ...outputSizes[orientation],
+      [key]: value,
+    });
+  }
+
   return (
     <SettingsCard title="导出尺寸">
-      <ReadonlyInfoList
-        rows={[
-          {
-            label: '竖图',
-            value: `${OUTPUT_IMAGE_SPECS.portrait.width} x ${OUTPUT_IMAGE_SPECS.portrait.height}`,
-          },
-          {
-            label: '横图',
-            value: `${OUTPUT_IMAGE_SPECS.landscape.width} x ${OUTPUT_IMAGE_SPECS.landscape.height}`,
-          },
-        ]}
-      />
+      <div className="space-y-3">
+        <p className="text-xs text-slate-500">默认使用小红书横图 / 竖图全屏尺寸，可自由修改。</p>
+        <div className="rounded-lg bg-background-upload p-3">
+          <p className="mb-2 text-sm font-medium text-slate-950">竖图</p>
+          <NumberInput
+            label="宽度"
+            min={320}
+            onChange={(value) => updateSize('portrait', 'width', value)}
+            value={outputSizes.portrait.width}
+          />
+          <NumberInput
+            label="高度"
+            min={320}
+            onChange={(value) => updateSize('portrait', 'height', value)}
+            value={outputSizes.portrait.height}
+          />
+        </div>
+        <div className="rounded-lg bg-background-upload p-3">
+          <p className="mb-2 text-sm font-medium text-slate-950">横图</p>
+          <NumberInput
+            label="宽度"
+            min={320}
+            onChange={(value) => updateSize('landscape', 'width', value)}
+            value={outputSizes.landscape.width}
+          />
+          <NumberInput
+            label="高度"
+            min={320}
+            onChange={(value) => updateSize('landscape', 'height', value)}
+            value={outputSizes.landscape.height}
+          />
+        </div>
+      </div>
     </SettingsCard>
   );
 }
 
 function WatermarkCard() {
+  const watermark = useSettingsStore((state) => state.watermark);
+  const setWatermark = useSettingsStore((state) => state.setWatermark);
+  const updateWatermark = (settings: Partial<WatermarkSettings>) =>
+    setWatermark({
+      ...watermark,
+      ...settings,
+    });
+
   return (
     <SettingsCard title="水印底栏">
-      <ReadonlyInfoList
-        rows={[
-          {
-            label: '底栏高度',
-            value: `${BOTTOM_BAR_HEIGHT_RATIO * 100}%`,
-          },
-          {
-            label: '透明度',
-            value: '30%',
-          },
-          {
-            label: '背景',
-            value: '黑色',
-          },
-        ]}
-      />
+      <label className="block text-sm text-slate-500">
+        <span>底栏高度 {Math.round(watermark.barHeightRatio * 100)}%</span>
+        <input
+          className="mt-2 w-full accent-primary"
+          max={30}
+          min={0}
+          onChange={(event) => updateWatermark({ barHeightRatio: Number(event.target.value) / 100 })}
+          type="range"
+          value={Math.round(watermark.barHeightRatio * 100)}
+        />
+      </label>
+      <label className="block text-sm text-slate-500">
+        <span>透明度 {Math.round(watermark.opacity * 100)}%</span>
+        <input
+          className="mt-2 w-full accent-primary"
+          max={100}
+          min={0}
+          onChange={(event) => updateWatermark({ opacity: Number(event.target.value) / 100 })}
+          type="range"
+          value={Math.round(watermark.opacity * 100)}
+        />
+      </label>
+      <label className="flex items-center justify-between gap-3 text-sm text-slate-500">
+        <span>背景颜色</span>
+        <input
+          className="h-9 w-16 rounded-md border border-border-default"
+          onChange={(event) => updateWatermark({ background: event.target.value })}
+          type="color"
+          value={watermark.background}
+        />
+      </label>
     </SettingsCard>
   );
 }
@@ -85,22 +137,18 @@ function WatermarkCard() {
 function OutputCard() {
   return (
     <SettingsCard title="输出格式">
-      <ReadonlyInfoList
-        rows={[
-          {
-            label: '格式',
-            value: 'JPG',
-          },
-          {
-            label: '质量',
-            value: `${JPG_QUALITY * 100}%`,
-          },
-          {
-            label: '文件名',
-            value: '原文件名_xhs.jpg',
-          },
-        ]}
-      />
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-slate-500">格式</span>
+        <span className="font-medium text-slate-950">JPG</span>
+      </div>
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-slate-500">质量</span>
+        <span className="font-medium text-slate-950">{JPG_QUALITY * 100}%</span>
+      </div>
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-slate-500">文件名</span>
+        <span className="font-medium text-slate-950">原文件名_xhs.jpg</span>
+      </div>
     </SettingsCard>
   );
 }
@@ -112,7 +160,9 @@ export function SettingsPanel() {
         <h2 className="text-lg font-semibold">设置</h2>
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
-        <LogoSettingsCard />
+        <SettingsCard title="品牌标识设置">
+          <LogoUploader />
+        </SettingsCard>
         <ExportCard />
         <WatermarkCard />
         <OutputCard />

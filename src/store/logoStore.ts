@@ -1,46 +1,38 @@
 import { create } from 'zustand';
-import { LogoAsset, LogoPosition } from '../types/logo';
+import { LogoAsset } from '../types/logo';
 
 interface LogoStore {
-  leftLogo: LogoAsset | null;
-  rightLogo: LogoAsset | null;
-  setLogo: (position: LogoPosition, file: File) => void;
-  removeLogo: (position: LogoPosition) => void;
+  logos: LogoAsset[];
+  addLogos: (files: File[]) => void;
+  removeLogo: (id: string) => void;
 }
 
-function createLogoAsset(position: LogoPosition, file: File): LogoAsset {
+function createLogoAsset(file: File): LogoAsset {
   return {
+    id: crypto.randomUUID(),
     file,
     fileName: file.name,
     objectUrl: URL.createObjectURL(file),
-    position,
     size: file.size,
   };
 }
 
 export const useLogoStore = create<LogoStore>((set) => ({
-  leftLogo: null,
-  rightLogo: null,
-  setLogo: (position, file) =>
+  logos: [],
+  addLogos: (files) =>
+    set((state) => ({
+      logos: [...state.logos, ...files.map(createLogoAsset)],
+    })),
+  removeLogo: (id) =>
     set((state) => {
-      const currentLogo = position === 'left' ? state.leftLogo : state.rightLogo;
+      const logo = state.logos.find((item) => item.id === id);
 
-      if (currentLogo) {
-        URL.revokeObjectURL(currentLogo.objectUrl);
+      if (logo) {
+        URL.revokeObjectURL(logo.objectUrl);
       }
 
-      const nextLogo = createLogoAsset(position, file);
-
-      return position === 'left' ? { leftLogo: nextLogo } : { rightLogo: nextLogo };
-    }),
-  removeLogo: (position) =>
-    set((state) => {
-      const currentLogo = position === 'left' ? state.leftLogo : state.rightLogo;
-
-      if (currentLogo) {
-        URL.revokeObjectURL(currentLogo.objectUrl);
-      }
-
-      return position === 'left' ? { leftLogo: null } : { rightLogo: null };
+      return {
+        logos: state.logos.filter((item) => item.id !== id),
+      };
     }),
 }));

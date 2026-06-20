@@ -1,59 +1,68 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useLogoStore } from '../../store/logoStore';
-import { LogoAsset, LogoPosition } from '../../types/logo';
+import { LogoAsset } from '../../types/logo';
 
 function isValidLogo(file: File) {
   const extension = file.name.split('.').pop()?.toLowerCase();
   return extension === 'png' || extension === 'svg';
 }
 
-function LogoPreview({ logo }: { logo: LogoAsset }) {
+function LogoPreview({ logo, onRemove }: { logo: LogoAsset; onRemove: () => void }) {
   return (
-    <div className="mt-3 rounded-lg border border-border-default bg-background-upload p-3">
-      <img alt={logo.fileName} className="h-16 max-w-full object-contain" src={logo.objectUrl} />
+    <div className="rounded-lg border border-border-default bg-background-upload p-3">
+      <img alt={logo.fileName} className="h-14 max-w-full object-contain" src={logo.objectUrl} />
       <p className="mt-2 truncate text-xs text-slate-600">{logo.fileName}</p>
+      <button
+        className="mt-2 h-8 w-full rounded-md border border-error text-xs font-medium text-error hover:bg-red-50"
+        onClick={onRemove}
+        type="button"
+      >
+        删除
+      </button>
     </div>
   );
 }
 
-export function LogoUploader({ position }: { position: LogoPosition }) {
+export function LogoUploader() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [message, setMessage] = useState('PNG / SVG');
-  const logo = useLogoStore((state) => (position === 'left' ? state.leftLogo : state.rightLogo));
-  const setLogo = useLogoStore((state) => state.setLogo);
+  const [message, setMessage] = useState('可上传多个 PNG / SVG');
+  const logos = useLogoStore((state) => state.logos);
+  const addLogos = useLogoStore((state) => state.addLogos);
   const removeLogo = useLogoStore((state) => state.removeLogo);
-  const label = position === 'left' ? '左侧品牌标识' : '右侧品牌标识';
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null;
+    const files = Array.from(event.target.files ?? []);
     event.target.value = '';
 
-    if (!file) {
+    if (files.length === 0) {
       return;
     }
 
-    if (!isValidLogo(file)) {
-      setMessage('品牌标识无效');
-      console.error('Invalid Logo', file.name);
-      toast.error('品牌标识无效');
-      return;
+    const validFiles = files.filter(isValidLogo);
+
+    if (validFiles.length !== files.length) {
+      setMessage('已跳过无效品牌标识');
+      toast.error('仅支持 PNG / SVG 品牌标识');
     }
 
-    setLogo(position, file);
-    setMessage('品牌标识已就绪');
+    if (validFiles.length > 0) {
+      addLogos(validFiles);
+      setMessage(`已上传 ${logos.length + validFiles.length} 个品牌标识`);
+    }
   }
 
   return (
-    <section className="rounded-lg border border-border-default p-4">
+    <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-medium text-slate-950">{label}</h3>
+          <p className="text-sm font-medium text-slate-950">品牌标识</p>
           <p className="mt-1 text-xs text-slate-500">{message}</p>
         </div>
         <input
           accept=".png,.svg"
           className="hidden"
+          multiple
           onChange={handleChange}
           ref={inputRef}
           type="file"
@@ -66,19 +75,14 @@ export function LogoUploader({ position }: { position: LogoPosition }) {
           上传
         </button>
       </div>
-      {logo ? (
-        <>
-          <LogoPreview logo={logo} />
-          <button
-            className="mt-3 h-9 w-full rounded-lg border border-error text-sm font-medium text-error hover:bg-red-50"
-            onClick={() => removeLogo(position)}
-            type="button"
-          >
-            删除品牌标识
-          </button>
-        </>
+      {logos.length > 0 ? (
+        <div className="grid grid-cols-2 gap-3">
+          {logos.map((logo) => (
+            <LogoPreview key={logo.id} logo={logo} onRemove={() => removeLogo(logo.id)} />
+          ))}
+        </div>
       ) : (
-        <p className="mt-3 rounded-lg bg-background-upload p-3 text-sm text-slate-500">
+        <p className="rounded-lg bg-background-upload p-3 text-sm text-slate-500">
           未上传品牌标识
         </p>
       )}

@@ -3,8 +3,9 @@ import { createOutputCanvas, releaseGeneratedCanvas } from './canvasService';
 import { exportCanvasToJpg, JpgExportResult } from './exportService';
 import { DrawableLogo, renderLogos } from './logoRenderer';
 import { renderBottomBar } from './watermarkRenderer';
+import type { OutputSize, WatermarkSettings } from '../store/settingsStore';
 import { UploadedImage, UploadedImageStatus } from '../types/image';
-import { LogoAsset, LogoPosition } from '../types/logo';
+import { LogoAsset } from '../types/logo';
 
 const MAX_CONCURRENT_IMAGES = 3;
 const CANCELED_ERROR = 'Processing Canceled';
@@ -18,8 +19,9 @@ interface DrawableImage {
 
 interface ProcessImagesParams {
   images: UploadedImage[];
-  leftLogo: LogoAsset | null;
-  rightLogo: LogoAsset | null;
+  logos: LogoAsset[];
+  outputSizes: Record<UploadedImage['orientation'], OutputSize>;
+  watermark: WatermarkSettings;
   signal: AbortSignal;
   onImageError: (error: unknown) => void;
   onImageStatus: (id: string, status: UploadedImageStatus) => void;
@@ -75,39 +77,33 @@ async function createDrawableImage(file: File, objectUrl: string): Promise<Drawa
   return createImageElementDrawable(image);
 }
 
-async function createDrawableLogos(
-  leftLogo: LogoAsset | null,
-  rightLogo: LogoAsset | null,
-  signal: AbortSignal,
-) {
-  const logos: Partial<Record<LogoPosition, DrawableImage>> = {};
-  const logoEntries: Array<[LogoPosition, LogoAsset | null]> = [['left', leftLogo], ['right', rightLogo]];
+async function createDrawableLogos(logos: LogoAsset[], signal: AbortSignal) {
+  const drawableLogos: DrawableImage[] = [];
 
   try {
-    for (const [position, logo] of logoEntries) {
+    for (const logo of logos) {
       throwIfCanceled(signal);
-
-      if (logo) {
-        logos[position] = await createDrawableImage(logo.file, logo.objectUrl);
-      }
+      drawableLogos.push(await createDrawableImage(logo.file, logo.objectUrl));
     }
 
-    return logos;
+    return drawableLogos;
   } catch (error) {
-    Object.values(logos).forEach((logo) => logo.dispose());
+    drawableLogos.forEach((logo) => logo.dispose());
     throw error;
   }
 }
 
 async function processImage(
   image: UploadedImage,
-  logos: Partial<Record<LogoPosition, DrawableLogo>>,
+  logos: DrawableLogo[],
+  outputSize: OutputSize,
+  watermark: WatermarkSettings,
   signal: AbortSignal,
 ): Promise<JpgExportResult> {
   throwIfCanceled(signal);
 
   const sourceImage = await createDrawableImage(image.file, image.objectUrl);
-  const generatedCanvas = createOutputCanvas(image.orientation);
+  const generatedCanvas = createOutputCanvas(image.orientation, outputSize);
 
   try {
     throwIfCanceled(signal);
@@ -115,7 +111,7 @@ async function processImage(
       width: sourceImage.width,
       height: sourceImage.height,
     });
-    const bottomBar = renderBottomBar(generatedCanvas);
+    const bottomBar = renderBottomBar(generatedCanvas, watermark);
     renderLogos(generatedCanvas, bottomBar, logos);
     throwIfCanceled(signal);
     return await exportCanvasToJpg(generatedCanvas.canvas, image.fileName);
@@ -127,16 +123,17 @@ async function processImage(
 
 export async function processImages({
   images,
-  leftLogo,
+  logos,
   onImageError,
   onImageStatus,
   onProgress,
-  rightLogo,
+  outputSizes,
   signal,
+  watermark,
 }: ProcessImagesParams): Promise<JpgExportResult[]> {
   let nextIndex = 0;
   const exportedFiles: JpgExportResult[] = [];
-  const logos = await createDrawableLogos(leftLogo, rightLogo, signal);
+  const drawableLogos = await createDrawableLogos(logos, signal);
 
   async function worker() {
     while (nextIndex < images.length) {
@@ -147,7 +144,13 @@ export async function processImages({
       onImageStatus(image.id, 'processing');
 
       try {
-        const exportedFile = await processImage(image, logos, signal);
+        const exportedFile = await processImage(
+          image,
+          drawableLogos,
+          outputSizes[image.orientation],
+          watermark,
+          signal,
+        );
         exportedFiles.push(exportedFile);
         onImageStatus(image.id, 'success');
       } catch (error) {
@@ -173,7 +176,7 @@ export async function processImages({
 
     return exportedFiles;
   } finally {
-    Object.values(logos).forEach((logo) => logo.dispose());
+    drawableLogos.forEach((logo) => logo.dispose());
   }
 }
 

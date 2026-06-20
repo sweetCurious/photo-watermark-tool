@@ -1,4 +1,4 @@
-import { BOTTOM_BAR_FILL_STYLE, BOTTOM_BAR_HEIGHT_RATIO } from '../constants/watermarkSpecs';
+import { WatermarkSettings } from '../store/settingsStore';
 import { GeneratedCanvas } from '../types/canvas';
 
 export interface BottomBarRect {
@@ -8,8 +8,8 @@ export interface BottomBarRect {
   height: number;
 }
 
-export function getBottomBarRect(width: number, height: number): BottomBarRect {
-  const barHeight = height * BOTTOM_BAR_HEIGHT_RATIO;
+export function getBottomBarRect(width: number, height: number, barHeightRatio: number): BottomBarRect {
+  const barHeight = height * barHeightRatio;
 
   return {
     x: 0,
@@ -19,12 +19,16 @@ export function getBottomBarRect(width: number, height: number): BottomBarRect {
   };
 }
 
-export function renderBottomBar(generatedCanvas: GeneratedCanvas): BottomBarRect {
+export function renderBottomBar(
+  generatedCanvas: GeneratedCanvas,
+  settings: WatermarkSettings,
+): BottomBarRect {
   const { context, width, height } = generatedCanvas;
-  const rect = getBottomBarRect(width, height);
+  const rect = getBottomBarRect(width, height, settings.barHeightRatio);
 
   context.save();
-  context.fillStyle = BOTTOM_BAR_FILL_STYLE;
+  context.globalAlpha = settings.opacity;
+  context.fillStyle = settings.background;
   context.fillRect(rect.x, rect.y, rect.width, rect.height);
   context.restore();
 

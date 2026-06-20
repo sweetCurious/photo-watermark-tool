@@ -1,10 +1,9 @@
-import { OUTPUT_IMAGE_SPECS } from '../constants/imageSpecs';
 import { GeneratedCanvas } from '../types/canvas';
 import { ImageOrientation } from '../types/image';
 import { releaseCanvas } from '../utils/memory';
+import type { OutputSize } from '../store/settingsStore';
 
-export function createOutputCanvas(orientation: ImageOrientation): GeneratedCanvas {
-  const spec = OUTPUT_IMAGE_SPECS[orientation];
+export function createOutputCanvas(orientation: ImageOrientation, spec: OutputSize): GeneratedCanvas {
   const canvas = document.createElement('canvas');
   canvas.width = spec.width;
   canvas.height = spec.height;

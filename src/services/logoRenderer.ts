@@ -1,7 +1,6 @@
 import { BottomBarRect } from './watermarkRenderer';
 import { GeneratedCanvas } from '../types/canvas';
-import { LogoPosition } from '../types/logo';
-import { getLogoRect } from '../utils/logoScale';
+import { LOGO_HEIGHT_RATIO, LOGO_MARGIN } from '../utils/logoScale';
 
 export interface DrawableLogo {
   image: CanvasImageSource;
@@ -9,26 +8,50 @@ export interface DrawableLogo {
   height: number;
 }
 
-export function renderLogo(
-  generatedCanvas: GeneratedCanvas,
-  bottomBar: BottomBarRect,
-  logo: DrawableLogo,
-  position: LogoPosition,
-) {
-  const rect = getLogoRect(logo.width, logo.height, bottomBar, position);
+interface LogoRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
-  generatedCanvas.context.drawImage(logo.image, rect.x, rect.y, rect.width, rect.height);
+function getLogoRects(logos: DrawableLogo[], bottomBar: BottomBarRect): LogoRect[] {
+  const logoHeight = bottomBar.height * LOGO_HEIGHT_RATIO;
+  const rects = logos.map((logo) => ({
+    x: 0,
+    y: bottomBar.y + (bottomBar.height - logoHeight) / 2,
+    width: logo.width * (logoHeight / logo.height),
+    height: logoHeight,
+  }));
+  const totalWidth =
+    rects.reduce((sum, rect) => sum + rect.width, 0) + Math.max(0, rects.length - 1) * LOGO_MARGIN;
+  const availableWidth = bottomBar.width - LOGO_MARGIN * 2;
+  const scale = totalWidth > availableWidth ? availableWidth / totalWidth : 1;
+  let nextX = LOGO_MARGIN;
 
-  return rect;
+  return rects.map((rect) => {
+    const nextRect = {
+      ...rect,
+      x: nextX,
+      width: rect.width * scale,
+      height: rect.height * scale,
+      y: bottomBar.y + (bottomBar.height - rect.height * scale) / 2,
+    };
+    nextX += nextRect.width + LOGO_MARGIN * scale;
+    return nextRect;
+  });
 }
 
 export function renderLogos(
   generatedCanvas: GeneratedCanvas,
   bottomBar: BottomBarRect,
-  logos: Partial<Record<LogoPosition, DrawableLogo>>,
+  logos: DrawableLogo[],
 ) {
-  return {
-    left: logos.left ? renderLogo(generatedCanvas, bottomBar, logos.left, 'left') : null,
-    right: logos.right ? renderLogo(generatedCanvas, bottomBar, logos.right, 'right') : null,
-  };
+  const rects = getLogoRects(logos, bottomBar);
+
+  rects.forEach((rect, index) => {
+    generatedCanvas.context.drawImage(logos[index].image, rect.x, rect.y, rect.width, rect.height);
+  });
+
+  return rects;
 }

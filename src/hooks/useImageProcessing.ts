@@ -4,6 +4,7 @@ import { JpgExportResult } from '../services/exportService';
 import { isProcessingCanceled, processImages } from '../services/imageProcessingService';
 import { useImageStore } from '../store/imageStore';
 import { useLogoStore } from '../store/logoStore';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface ProcessingProgress {
   current: number;
@@ -13,8 +14,9 @@ interface ProcessingProgress {
 export function useImageProcessing() {
   const images = useImageStore((state) => state.images);
   const updateImageStatus = useImageStore((state) => state.updateImageStatus);
-  const leftLogo = useLogoStore((state) => state.leftLogo);
-  const rightLogo = useLogoStore((state) => state.rightLogo);
+  const logos = useLogoStore((state) => state.logos);
+  const outputSizes = useSettingsStore((state) => state.outputSizes);
+  const watermark = useSettingsStore((state) => state.watermark);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<ProcessingProgress>({ current: 0, total: 0 });
@@ -38,8 +40,9 @@ export function useImageProcessing() {
     try {
       const files = await processImages({
         images,
-        leftLogo,
-        rightLogo,
+        logos,
+        outputSizes,
+        watermark,
         signal: abortController.signal,
         onImageStatus: updateImageStatus,
         onProgress: () =>
