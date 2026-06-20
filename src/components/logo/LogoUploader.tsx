@@ -23,7 +23,7 @@ export function LogoUploader({ position }: { position: LogoPosition }) {
   const logo = useLogoStore((state) => (position === 'left' ? state.leftLogo : state.rightLogo));
   const setLogo = useLogoStore((state) => state.setLogo);
   const removeLogo = useLogoStore((state) => state.removeLogo);
-  const label = position === 'left' ? 'Left Logo' : 'Right Logo';
+  const label = position === 'left' ? '左侧品牌标识' : '右侧品牌标识';
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
@@ -34,14 +34,14 @@ export function LogoUploader({ position }: { position: LogoPosition }) {
     }
 
     if (!isValidLogo(file)) {
-      setMessage('Invalid Logo');
+      setMessage('品牌标识无效');
       console.error('Invalid Logo', file.name);
-      toast.error('Invalid Logo');
+      toast.error('品牌标识无效');
       return;
     }
 
     setLogo(position, file);
-    setMessage('Logo ready');
+    setMessage('品牌标识已就绪');
   }
 
   return (
@@ -63,7 +63,7 @@ export function LogoUploader({ position }: { position: LogoPosition }) {
           onClick={() => inputRef.current?.click()}
           type="button"
         >
-          Upload
+          上传
         </button>
       </div>
       {logo ? (
@@ -74,11 +74,13 @@ export function LogoUploader({ position }: { position: LogoPosition }) {
             onClick={() => removeLogo(position)}
             type="button"
           >
-            Remove Logo
+            删除品牌标识
           </button>
         </>
       ) : (
-        <p className="mt-3 rounded-lg bg-background-upload p-3 text-sm text-slate-500">No Logo</p>
+        <p className="mt-3 rounded-lg bg-background-upload p-3 text-sm text-slate-500">
+          未上传品牌标识
+        </p>
       )}
     </section>
   );

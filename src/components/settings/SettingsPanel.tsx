@@ -33,7 +33,7 @@ function ReadonlyInfoList({ rows }: { rows: ReadonlyRow[] }) {
 
 function LogoSettingsCard() {
   return (
-    <SettingsCard title="Logo">
+    <SettingsCard title="品牌标识设置">
       <LogoUploader position="left" />
       <LogoUploader position="right" />
     </SettingsCard>
@@ -42,15 +42,15 @@ function LogoSettingsCard() {
 
 function ExportCard() {
   return (
-    <SettingsCard title="Export">
+    <SettingsCard title="导出尺寸">
       <ReadonlyInfoList
         rows={[
           {
-            label: 'Portrait',
+            label: '竖图',
             value: `${OUTPUT_IMAGE_SPECS.portrait.width} x ${OUTPUT_IMAGE_SPECS.portrait.height}`,
           },
           {
-            label: 'Landscape',
+            label: '横图',
             value: `${OUTPUT_IMAGE_SPECS.landscape.width} x ${OUTPUT_IMAGE_SPECS.landscape.height}`,
           },
         ]}
@@ -61,20 +61,20 @@ function ExportCard() {
 
 function WatermarkCard() {
   return (
-    <SettingsCard title="Watermark">
+    <SettingsCard title="水印底栏">
       <ReadonlyInfoList
         rows={[
           {
-            label: 'Bottom Bar Height',
+            label: '底栏高度',
             value: `${BOTTOM_BAR_HEIGHT_RATIO * 100}%`,
           },
           {
-            label: 'Opacity',
+            label: '透明度',
             value: '30%',
           },
           {
-            label: 'Background',
-            value: 'Black',
+            label: '背景',
+            value: '黑色',
           },
         ]}
       />
@@ -84,20 +84,20 @@ function WatermarkCard() {
 
 function OutputCard() {
   return (
-    <SettingsCard title="Output">
+    <SettingsCard title="输出格式">
       <ReadonlyInfoList
         rows={[
           {
-            label: 'Format',
+            label: '格式',
             value: 'JPG',
           },
           {
-            label: 'Quality',
+            label: '质量',
             value: `${JPG_QUALITY * 100}%`,
           },
           {
-            label: 'Filename',
-            value: 'OriginalName_xhs.jpg',
+            label: '文件名',
+            value: '原文件名_xhs.jpg',
           },
         ]}
       />
@@ -109,7 +109,7 @@ export function SettingsPanel() {
   return (
     <aside className="flex w-[360px] shrink-0 flex-col border-l border-border-default bg-background-panel">
       <div className="border-b border-border-default px-5 py-4">
-        <h2 className="text-lg font-semibold">Settings</h2>
+        <h2 className="text-lg font-semibold">设置</h2>
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
         <LogoSettingsCard />

@@ -57,14 +57,14 @@ export function ImageUpload() {
         ref={inputRef}
         type="file"
       />
-      <p className="text-lg font-semibold">Upload Photos</p>
+      <p className="text-lg font-semibold">上传照片</p>
       <p className="mt-2 text-sm text-slate-500">{message}</p>
       <button
         className="mt-6 h-10 rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         onClick={() => inputRef.current?.click()}
         type="button"
       >
-        Select Images
+        选择图片
       </button>
     </div>
   );

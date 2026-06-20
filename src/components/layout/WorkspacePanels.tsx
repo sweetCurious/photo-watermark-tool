@@ -6,7 +6,7 @@ function LeftPanel() {
   return (
     <aside className="flex w-[280px] shrink-0 flex-col border-r border-border-default bg-background-panel">
       <div className="border-b border-border-default px-5 py-4">
-        <h2 className="text-lg font-semibold">Image List</h2>
+        <h2 className="text-lg font-semibold">图片列表</h2>
       </div>
       <ImageList />
     </aside>
@@ -17,7 +17,7 @@ function PreviewPanel() {
   return (
     <section className="flex min-w-0 flex-1 flex-col bg-[#F5F5F5]">
       <div className="border-b border-border-default bg-background-panel px-6 py-4">
-        <h2 className="text-lg font-semibold">Preview</h2>
+        <h2 className="text-lg font-semibold">预览</h2>
       </div>
       <div className="flex flex-1 items-center justify-center">
         <ImagePreview />

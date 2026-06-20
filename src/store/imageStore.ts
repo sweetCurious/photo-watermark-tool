@@ -24,7 +24,7 @@ export const useImageStore = create<ImageStore>((set) => ({
 
     if (hasLargeFile) {
       console.error('Memory Limit Exceeded');
-      toast.warning('Memory Limit Exceeded');
+      toast.warning('图片较大，可能占用较多内存');
     }
 
     files.forEach((file) => {
@@ -37,7 +37,7 @@ export const useImageStore = create<ImageStore>((set) => ({
         )
         .catch((error: unknown) => {
           console.error('Image Load Failed', error);
-          toast.error('Image Load Failed');
+          toast.error('图片读取失败');
         });
     });
   },

@@ -3,15 +3,24 @@ import { Toaster, toast } from 'sonner';
 import { Home } from './pages/Home';
 
 function getErrorMessage(error: unknown) {
+  const messages: Record<string, string> = {
+    'Export Failed': '导出失败',
+    'Image Load Failed': '图片读取失败',
+    'Invalid Logo': '品牌标识无效',
+    'Memory Limit Exceeded': '内存不足',
+    'Processing Canceled': '已取消处理',
+    'Processing Failed': '处理失败',
+  };
+
   if (error instanceof Error && error.message) {
-    return error.message;
+    return messages[error.message] ?? error.message;
   }
 
   if (typeof error === 'string' && error) {
-    return error;
+    return messages[error] ?? error;
   }
 
-  return 'Export Failed';
+  return '导出失败';
 }
 
 export function App() {

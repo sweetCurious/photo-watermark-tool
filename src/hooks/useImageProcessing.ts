@@ -49,14 +49,14 @@ export function useImageProcessing() {
           })),
         onImageError: (error) => {
           console.error('Processing Failed', error);
-          toast.error('Processing Failed');
+          toast.error('处理失败');
         },
       });
 
       setExportedFiles(files);
     } catch (error) {
       console.error('Processing Failed', error);
-      toast.error(isProcessingCanceled(error) ? 'Processing Canceled' : 'Processing Failed');
+      toast.error(isProcessingCanceled(error) ? '已取消处理' : '处理失败');
     } finally {
       abortControllerRef.current = null;
       setIsProcessing(false);

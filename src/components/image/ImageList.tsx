@@ -5,6 +5,21 @@ function formatFileSize(size: number) {
   return `${(size / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function getOrientationLabel(orientation: string) {
+  return orientation === 'portrait' ? '竖图' : '横图';
+}
+
+function getStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    failed: '失败',
+    processing: '处理中',
+    ready: '就绪',
+    success: '成功',
+  };
+
+  return labels[status] ?? status;
+}
+
 function ImageItem({
   image,
   isSelected,
@@ -33,11 +48,11 @@ function ImageItem({
           {image.width} x {image.height} · {formatFileSize(image.size)}
         </p>
         <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-          <span className="rounded-full bg-slate-100 px-2 py-1 capitalize text-slate-700">
-            {image.orientation}
+          <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">
+            {getOrientationLabel(image.orientation)}
           </span>
-          <span className="rounded-full bg-slate-100 px-2 py-1 capitalize text-slate-700">
-            {image.status}
+          <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">
+            {getStatusLabel(image.status)}
           </span>
         </div>
       </button>
@@ -46,7 +61,7 @@ function ImageItem({
         onClick={onRemove}
         type="button"
       >
-        Delete
+        删除
       </button>
     </div>
   );
@@ -64,7 +79,7 @@ export function ImageList() {
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         {images.length === 0 ? (
           <div className="flex h-full items-center justify-center text-sm text-slate-500">
-            No images
+            暂无图片
           </div>
         ) : (
           images.map((image) => (
@@ -85,7 +100,7 @@ export function ImageList() {
           onClick={clearImages}
           type="button"
         >
-          Clear All
+          清空全部
         </button>
       </div>
     </div>

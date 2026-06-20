@@ -13,7 +13,7 @@ export function DownloadButton({ files }: { files: JpgExportResult[] }) {
       }}
       type="button"
     >
-      Download ZIP
+      下载 ZIP
     </button>
   );
 }

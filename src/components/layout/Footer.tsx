@@ -4,13 +4,13 @@ import { DownloadButton } from '../actions/DownloadButton';
 export function Footer() {
   const { cancelProcessing, exportedFiles, imageCount, isProcessing, progress, startProcessing } =
     useImageProcessing();
-  const statusText = isProcessing ? 'Processing' : 'Ready';
+  const statusText = isProcessing ? '处理中' : '就绪';
   const progressText = progress.total > 0 ? `${progress.current} / ${progress.total}` : '0 / 0';
 
   return (
     <footer className="flex h-[72px] shrink-0 items-center justify-between border-t border-border-default bg-background-panel px-6">
       <div className="flex items-center gap-4 text-sm">
-        <span className="font-medium">{imageCount} Images</span>
+        <span className="font-medium">{imageCount} 张图片</span>
         <span className="rounded-full border border-border-default px-3 py-1 text-xs text-slate-600">
           {statusText}
         </span>
@@ -40,7 +40,7 @@ export function Footer() {
           }}
           type="button"
         >
-          {isProcessing ? 'Cancel Processing' : 'Start Processing'}
+          {isProcessing ? '取消处理' : '开始处理'}
         </button>
         <DownloadButton files={exportedFiles} />
       </div>

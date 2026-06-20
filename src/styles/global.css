@@ -10,8 +10,8 @@
 
 body {
   margin: 0;
-  min-width: 1280px;
   min-height: 100vh;
+  overflow-x: auto;
   background: #f8f9fa;
 }
 
@@ -40,22 +40,4 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
-}
-
-@media (max-width: 1279px) {
-  body::before {
-    position: fixed;
-    inset: 0;
-    z-index: 1200;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: #f8f9fa;
-    color: #0f172a;
-    content: 'Desktop only. Please use a browser window at least 1280px wide.';
-    font-size: 18px;
-    font-weight: 600;
-    text-align: center;
-  }
 }
