@@ -1,5 +1,6 @@
 import { PointerEvent, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useCompositionMode } from '../../hooks/useCompositionMode';
 import { usePreviewFitScale } from '../../hooks/usePreviewFitScale';
 import { createDrawableLogos } from '../../services/imageProcessingService';
 import { createLogoCanvas, getLogoRects } from '../../services/logoRenderer';
@@ -40,6 +41,11 @@ export function ImagePreview() {
   const selectedOutputSize = canvasOrientation ? outputSizes[canvasOrientation] : null;
   const selectedTemplate = canvasOrientation ? templates[canvasOrientation] : null;
   const { fitScale, previewViewportRef } = usePreviewFitScale(selectedOutputSize);
+  const compositionMode = useCompositionMode({
+    image: selectedImage,
+    resetKey: `${canvasOrientation ?? 'none'}:${selectedImageId ?? 'none'}`,
+    updateComposition: updateImageComposition,
+  });
   const displayScale = fitScale * (previewScale / 100);
 
   useEffect(() => {
@@ -214,6 +220,7 @@ export function ImagePreview() {
     dragStateRef.current = null;
   }
 
+
   if (!canvasOrientation) {
     return <div className="flex h-full items-center justify-center p-10"><CanvasSetup /></div>;
   }
@@ -241,6 +248,7 @@ export function ImagePreview() {
           <InteractiveCanvas
             displayScale={displayScale}
             image={selectedImage}
+            isCompositionEditing={compositionMode.isEditing}
             logoOverlays={logoOverlays}
             onCompositionChange={(composition) =>
               updateImageComposition(selectedImage.id, composition)
@@ -248,6 +256,7 @@ export function ImagePreview() {
             onLogoPointerDown={handleLogoPointerDown}
             onLogoPointerMove={handleLogoPointerMove}
             onLogoPointerUp={handleLogoPointerUp}
+            onStartComposition={compositionMode.start}
             outputSize={selectedOutputSize}
             surfaceRef={previewSurfaceRef}
             template={selectedTemplate}
@@ -256,7 +265,11 @@ export function ImagePreview() {
         <div className="pointer-events-none absolute bottom-4 left-1/2 z-30 -translate-x-1/2">
           <CompositionControls
             composition={selectedImage.composition}
+            isEditing={compositionMode.isEditing}
+            onCancel={compositionMode.cancel}
             onChange={(composition) => updateImageComposition(selectedImage.id, composition)}
+            onDone={compositionMode.finish}
+            onStart={compositionMode.start}
           />
         </div>
       </div>

@@ -15,8 +15,10 @@ interface PhotoDragState {
 interface InteractiveCanvasProps {
   displayScale: number;
   image: UploadedImage;
+  isCompositionEditing: boolean;
   logoOverlays: LogoOverlay[];
   onCompositionChange: (composition: ImageComposition) => void;
+  onStartComposition: () => void;
   onLogoPointerDown: (event: PointerEvent<HTMLImageElement>, overlay: LogoOverlay) => void;
   onLogoPointerMove: (event: PointerEvent<HTMLImageElement>) => void;
   onLogoPointerUp: (event: PointerEvent<HTMLImageElement>) => void;
@@ -28,8 +30,10 @@ interface InteractiveCanvasProps {
 export function InteractiveCanvas({
   displayScale,
   image,
+  isCompositionEditing,
   logoOverlays,
   onCompositionChange,
+  onStartComposition,
   onLogoPointerDown,
   onLogoPointerMove,
   onLogoPointerUp,
@@ -48,6 +52,10 @@ export function InteractiveCanvas({
   );
 
   function handlePointerDown(event: PointerEvent<HTMLImageElement>) {
+    if (!isCompositionEditing) {
+      return;
+    }
+
     event.currentTarget.setPointerCapture(event.pointerId);
     dragStateRef.current = {
       composition: image.composition,
@@ -107,12 +115,13 @@ export function InteractiveCanvas({
         className="absolute max-w-none select-none"
         draggable={false}
         onPointerCancel={handlePointerUp}
+        onDoubleClick={onStartComposition}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         src={image.objectUrl}
         style={{
-          cursor: isDragging ? 'grabbing' : 'grab',
+          cursor: isCompositionEditing ? (isDragging ? 'grabbing' : 'grab') : 'default',
           height: photoRect.height * displayScale,
           left: photoRect.x * displayScale,
           touchAction: 'none',
@@ -128,6 +137,15 @@ export function InteractiveCanvas({
           opacity: template.watermark.opacity,
         }}
       />
+      {isCompositionEditing ? (
+        <div className="pointer-events-none absolute inset-0 z-10">
+          <span className="absolute inset-y-0 left-1/3 w-px bg-white/80 shadow-[0_0_1px_rgba(15,23,42,0.7)]" />
+          <span className="absolute inset-y-0 left-2/3 w-px bg-white/80 shadow-[0_0_1px_rgba(15,23,42,0.7)]" />
+          <span className="absolute inset-x-0 top-1/3 h-px bg-white/80 shadow-[0_0_1px_rgba(15,23,42,0.7)]" />
+          <span className="absolute inset-x-0 top-2/3 h-px bg-white/80 shadow-[0_0_1px_rgba(15,23,42,0.7)]" />
+          <span className="absolute inset-0 border-2 border-violet-500/80" />
+        </div>
+      ) : null}
       <LogoOverlayLayer
         displayScale={displayScale}
         logoOverlays={logoOverlays}
