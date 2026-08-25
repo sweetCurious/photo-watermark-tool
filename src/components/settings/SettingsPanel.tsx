@@ -1,7 +1,6 @@
-import { ImageIcon, SlidersHorizontal } from 'lucide-react';
+import { ImageIcon, RectangleHorizontal, RectangleVertical, SlidersHorizontal } from 'lucide-react';
 import { ReactNode } from 'react';
 import { JPG_QUALITY } from '../../services/exportService';
-import { useImageStore } from '../../store/imageStore';
 import { TemplateSettings, useSettingsStore } from '../../store/settingsStore';
 import { ImageOrientation } from '../../types/image';
 import { LogoUploader } from '../logo/LogoUploader';
@@ -50,7 +49,7 @@ function ExportCard({ selectedTemplate }: { selectedTemplate: ImageOrientation }
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <p className="mb-3 flex items-center justify-between text-sm font-medium text-slate-700">
           <span>{label}模板</span>
-          <span className="rounded-full bg-white px-2 py-1 text-[11px] font-normal text-slate-400 shadow-sm">跟随当前照片</span>
+          <span className="rounded-full bg-white px-2 py-1 text-[11px] font-normal text-slate-400 shadow-sm">当前画布</span>
         </p>
         <NumberInput
           label="宽度"
@@ -212,10 +211,9 @@ function OutputCard() {
 }
 
 export function SettingsPanel() {
-  const images = useImageStore((state) => state.images);
-  const selectedImageId = useImageStore((state) => state.selectedImageId);
-  const selectedImage = images.find((image) => image.id === selectedImageId) ?? null;
-  const selectedTemplate: ImageOrientation = selectedImage?.orientation ?? 'portrait';
+  const canvasOrientation = useSettingsStore((state) => state.canvasOrientation);
+  const setCanvasOrientation = useSettingsStore((state) => state.setCanvasOrientation);
+  const selectedTemplate: ImageOrientation = canvasOrientation ?? 'portrait';
   const orientationLabel = selectedTemplate === 'portrait' ? '竖图' : '横图';
 
   return (
@@ -230,6 +228,28 @@ export function SettingsPanel() {
         </span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
+        <SettingsCard title="画布方向">
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              ['portrait', '竖版', RectangleVertical],
+              ['landscape', '横版', RectangleHorizontal],
+            ] as const).map(([orientation, label, Icon]) => (
+              <button
+                className={`flex h-11 items-center justify-center gap-2 rounded-xl border text-sm font-medium ${
+                  selectedTemplate === orientation && canvasOrientation
+                    ? 'border-violet-500 bg-violet-50 text-violet-700'
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                }`}
+                key={orientation}
+                onClick={() => setCanvasOrientation(orientation)}
+                type="button"
+              >
+                <Icon className="size-4" /> {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs leading-5 text-slate-400">切换画布会应用到当前批次的全部照片。</p>
+        </SettingsCard>
         <SettingsCard title="品牌标识">
           <LogoUploader />
         </SettingsCard>

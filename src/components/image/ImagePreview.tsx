@@ -2,14 +2,12 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { usePreviewFitScale } from '../../hooks/usePreviewFitScale';
 import { createDrawableLogos, renderProcessedCanvas } from '../../services/imageProcessingService';
-import {
-  createLogoCanvas,
-  getLogoRects,
-} from '../../services/logoRenderer';
+import { createLogoCanvas, getLogoRects } from '../../services/logoRenderer';
 import { useImageStore } from '../../store/imageStore';
 import { useLogoStore } from '../../store/logoStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { releaseCanvas, revokeObjectUrl } from '../../utils/memory';
+import { CanvasSetup } from '../canvas/CanvasSetup';
 import { ImageUpload } from '../upload/ImageUpload';
 import { LogoOverlayLayer } from './LogoOverlayLayer';
 import { PreviewToolbar } from './PreviewToolbar';
@@ -35,15 +33,16 @@ export function ImagePreview() {
   const logos = useLogoStore((state) => state.logos);
   const outputSizes = useSettingsStore((state) => state.outputSizes);
   const templates = useSettingsStore((state) => state.templates);
+  const canvasOrientation = useSettingsStore((state) => state.canvasOrientation);
   const setTemplate = useSettingsStore((state) => state.setTemplate);
   const selectedImage = images.find((image) => image.id === selectedImageId) ?? null;
-  const selectedOutputSize = selectedImage ? outputSizes[selectedImage.orientation] : null;
-  const selectedTemplate = selectedImage ? templates[selectedImage.orientation] : null;
+  const selectedOutputSize = canvasOrientation ? outputSizes[canvasOrientation] : null;
+  const selectedTemplate = canvasOrientation ? templates[canvasOrientation] : null;
   const { fitScale, previewViewportRef } = usePreviewFitScale(selectedOutputSize);
   const displayScale = fitScale * (previewScale / 100);
 
   useEffect(() => {
-    if (!selectedImage) {
+    if (!selectedImage || !canvasOrientation) {
       setPreviewUrl((currentUrl) => {
         if (currentUrl) {
           revokeObjectUrl(currentUrl);
@@ -59,8 +58,9 @@ export function ImagePreview() {
     }
 
     const currentImage = selectedImage;
-    const outputSize = outputSizes[currentImage.orientation];
-    const template = templates[currentImage.orientation];
+    const currentCanvasOrientation = canvasOrientation;
+    const outputSize = outputSizes[currentCanvasOrientation];
+    const template = templates[currentCanvasOrientation];
     const abortController = new AbortController();
 
     async function renderPreview() {
@@ -92,6 +92,7 @@ export function ImagePreview() {
         const canvas = await renderProcessedCanvas(
           currentImage,
           [],
+          currentCanvasOrientation,
           outputSize,
           template,
           abortController.signal,
@@ -134,7 +135,7 @@ export function ImagePreview() {
     return () => {
       abortController.abort();
     };
-  }, [logos, outputSizes, selectedImage, templates]);
+  }, [canvasOrientation, logos, outputSizes, selectedImage, templates]);
 
   function getPointerCanvasPosition(event: PointerEvent<HTMLImageElement>) {
     const previewSurface = previewSurfaceRef.current;
@@ -216,14 +217,14 @@ export function ImagePreview() {
     if (
       !dragState ||
       dragState.pointerId !== event.pointerId ||
-      !selectedImage ||
+      !canvasOrientation ||
       !selectedOutputSize ||
       !selectedTemplate
     ) {
       return;
     }
 
-    setTemplate(selectedImage.orientation, {
+    setTemplate(canvasOrientation, {
       ...selectedTemplate,
       logo: {
         ...selectedTemplate.logo,
@@ -237,6 +238,10 @@ export function ImagePreview() {
       },
     });
     dragStateRef.current = null;
+  }
+
+  if (!canvasOrientation) {
+    return <div className="flex h-full items-center justify-center p-10"><CanvasSetup /></div>;
   }
 
   if (!selectedImage || !selectedOutputSize || !selectedTemplate) {

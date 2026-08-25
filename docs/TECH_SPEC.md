@@ -92,15 +92,14 @@ Fallback：`HTMLImageElement`。
 
 1. Read File
 2. Decode
-3. Detect Orientation
+3. Read Selected Canvas
 4. Create Canvas
-5. Generate Blur Background
-6. Render Background
-7. Render Original Image
-8. Render Bottom Bar
-9. Render Left Logo
-10. Render Right Logo
-11. Export JPG
+5. Calculate Cover Scale
+6. Render Centered Image
+7. Render Bottom Bar
+8. Render Left Logo
+9. Render Right Logo
+10. Export JPG
 
 不得修改顺序。
 
@@ -112,23 +111,22 @@ Canvas 使用完成立即释放引用。
 
 避免内存泄漏。
 
-## 10. Blur Background
+## 10. Canvas Cover
 
 流程：
 
-1. 复制原图
-2. 放大
-3. 铺满画布
-4. Gaussian Blur
-5. 绘制
+1. 读取用户选择的统一画布
+2. 计算 Cover 缩放比例
+3. 保持原比例缩放
+4. 居中绘制并裁切画布外区域
 
-禁止纯色背景。禁止拉伸背景。
+禁止拉伸、留白和模糊背景。
 
 ## 11. Original Image
 
 保持原比例。
 
-不得拉伸。不得裁剪主体。
+不得拉伸。允许居中裁切画布外区域。
 
 默认 Center。
 

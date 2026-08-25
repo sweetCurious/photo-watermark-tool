@@ -32,8 +32,10 @@ export interface TemplateSettings {
 }
 
 interface SettingsStore {
+  canvasOrientation: ImageOrientation | null;
   outputSizes: Record<ImageOrientation, OutputSize>;
   templates: Record<ImageOrientation, TemplateSettings>;
+  setCanvasOrientation: (orientation: ImageOrientation) => void;
   setOutputSize: (orientation: ImageOrientation, size: OutputSize) => void;
   setTemplate: (orientation: ImageOrientation, template: TemplateSettings) => void;
 }
@@ -53,11 +55,13 @@ const DEFAULT_TEMPLATE: TemplateSettings = {
 };
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
+  canvasOrientation: null,
   outputSizes: OUTPUT_IMAGE_SPECS,
   templates: {
     landscape: DEFAULT_TEMPLATE,
     portrait: DEFAULT_TEMPLATE,
   },
+  setCanvasOrientation: (orientation) => set({ canvasOrientation: orientation }),
   setOutputSize: (orientation, size) =>
     set((state) => ({
       outputSizes: {

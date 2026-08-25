@@ -1,10 +1,10 @@
-import { renderBlurBackground } from './backgroundRenderer';
+import { renderCoverImage } from './backgroundRenderer';
 import { createOutputCanvas } from './canvasService';
 import { exportCanvasToJpg, JpgExportResult } from './exportService';
 import { DrawableLogo, renderLogos } from './logoRenderer';
 import { renderBottomBar } from './watermarkRenderer';
 import type { OutputSize, TemplateSettings } from '../store/settingsStore';
-import { UploadedImage, UploadedImageStatus } from '../types/image';
+import { ImageOrientation, UploadedImage, UploadedImageStatus } from '../types/image';
 import { LogoAsset } from '../types/logo';
 import { releaseCanvas } from '../utils/memory';
 
@@ -19,10 +19,11 @@ interface DrawableImage {
 }
 
 interface ProcessImagesParams {
+  canvasOrientation: ImageOrientation;
   images: UploadedImage[];
   logos: LogoAsset[];
-  outputSizes: Record<UploadedImage['orientation'], OutputSize>;
-  templates: Record<UploadedImage['orientation'], TemplateSettings>;
+  outputSize: OutputSize;
+  template: TemplateSettings;
   signal: AbortSignal;
   onImageError: (error: unknown) => void;
   onImageStatus: (id: string, status: UploadedImageStatus) => void;
@@ -101,6 +102,7 @@ export async function createDrawableLogos(logos: LogoAsset[], signal: AbortSigna
 export async function renderProcessedCanvas(
   image: UploadedImage,
   logos: DrawableLogo[],
+  canvasOrientation: ImageOrientation,
   outputSize: OutputSize,
   template: TemplateSettings,
   signal: AbortSignal,
@@ -108,11 +110,11 @@ export async function renderProcessedCanvas(
   throwIfCanceled(signal);
 
   const sourceImage = await createDrawableImage(image.file, image.objectUrl);
-  const generatedCanvas = createOutputCanvas(image.orientation, outputSize);
+  const generatedCanvas = createOutputCanvas(canvasOrientation, outputSize);
 
   try {
     throwIfCanceled(signal);
-    renderBlurBackground(generatedCanvas, sourceImage.image, {
+    renderCoverImage(generatedCanvas, sourceImage.image, {
       width: sourceImage.width,
       height: sourceImage.height,
     });
@@ -126,14 +128,15 @@ export async function renderProcessedCanvas(
 }
 
 export async function processImages({
+  canvasOrientation,
   images,
   logos,
   onImageError,
   onImageStatus,
   onProgress,
-  outputSizes,
+  outputSize,
   signal,
-  templates,
+  template,
 }: ProcessImagesParams): Promise<JpgExportResult[]> {
   let nextIndex = 0;
   const exportedFiles: JpgExportResult[] = [];
@@ -151,8 +154,9 @@ export async function processImages({
         const canvas = await renderProcessedCanvas(
           image,
           drawableLogos,
-          outputSizes[image.orientation],
-          templates[image.orientation],
+          canvasOrientation,
+          outputSize,
+          template,
           signal,
         );
         try {

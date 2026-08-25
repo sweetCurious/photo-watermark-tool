@@ -1,6 +1,6 @@
 import { Check, ImagePlus, LockKeyhole, Sparkles } from 'lucide-react';
 import { useImageStore } from '../../store/imageStore';
-import { useLogoStore } from '../../store/logoStore';
+import { useSettingsStore } from '../../store/settingsStore';
 
 function FlowStep({
   active,
@@ -33,7 +33,8 @@ function FlowStep({
 
 export function Header() {
   const imageCount = useImageStore((state) => state.images.length);
-  const logoCount = useLogoStore((state) => state.logos.length);
+  const canvasOrientation = useSettingsStore((state) => state.canvasOrientation);
+  const hasCanvas = canvasOrientation !== null;
 
   return (
     <header className="z-[100] flex h-[72px] shrink-0 items-center justify-between border-b border-border-default bg-background-panel px-6 shadow-sm shadow-slate-200/40">
@@ -49,17 +50,17 @@ export function Header() {
         </div>
       </div>
       <div className="flex items-center gap-4 rounded-full border border-slate-200 bg-slate-50/80 px-4 py-2">
-        <FlowStep active={imageCount === 0} complete={imageCount > 0} label="添加照片" number={1} />
+        <FlowStep active={!hasCanvas} complete={hasCanvas} label="设置画布" number={1} />
         <span className="h-px w-7 bg-slate-200" />
         <FlowStep
-          active={imageCount > 0 && logoCount === 0}
-          complete={logoCount > 0}
-          label="品牌（可选）"
+          active={hasCanvas && imageCount === 0}
+          complete={imageCount > 0}
+          label="添加照片"
           number={2}
         />
         <span className="h-px w-7 bg-slate-200" />
         <FlowStep
-          active={imageCount > 0 && logoCount > 0}
+          active={imageCount > 0}
           complete={false}
           label="处理导出"
           number={3}

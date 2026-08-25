@@ -74,9 +74,9 @@ Status: Locked
 
 必须保持图片比例。
 
-不得拉伸图片。不得裁剪主体。
+不得拉伸图片。必须使用 Cover 等比例缩放填满画布。
 
-必须使用 Blur Background。
+照片与画布比例不一致时，允许居中裁切超出画布的边缘。禁止 Blur Background。
 
 Logo 保持比例。Bottom Bar 固定 10%。
 

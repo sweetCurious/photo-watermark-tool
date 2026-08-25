@@ -17,6 +17,7 @@ export function useImageProcessing() {
   const logos = useLogoStore((state) => state.logos);
   const outputSizes = useSettingsStore((state) => state.outputSizes);
   const templates = useSettingsStore((state) => state.templates);
+  const canvasOrientation = useSettingsStore((state) => state.canvasOrientation);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<ProcessingProgress>({ current: 0, total: 0 });
@@ -27,7 +28,7 @@ export function useImageProcessing() {
   }
 
   async function startProcessing() {
-    if (isProcessing || images.length === 0) {
+    if (isProcessing || images.length === 0 || !canvasOrientation) {
       return;
     }
 
@@ -39,10 +40,11 @@ export function useImageProcessing() {
 
     try {
       const files = await processImages({
+        canvasOrientation,
         images,
         logos,
-        outputSizes,
-        templates,
+        outputSize: outputSizes[canvasOrientation],
+        template: templates[canvasOrientation],
         signal: abortController.signal,
         onImageStatus: updateImageStatus,
         onProgress: () =>

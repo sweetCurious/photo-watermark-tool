@@ -43,15 +43,15 @@ Decision：统一使用 Canvas API 完成图片处理。
 
 Reason：浏览器兼容性最好，性能稳定，无需大型依赖。
 
-## ADR-005 Blur Background
+## ADR-005 Canvas Cover
 
 Status：Accepted
 
-Decision：背景采用原图放大 + 高斯模糊。
+Decision：先选择统一画布，照片采用 Cover 等比例缩放并填满画布。
 
-禁止拉伸图片、裁剪主体、纯色补边。
+禁止拉伸、留白和模糊背景；比例不一致时居中裁切边缘。
 
-Reason：保持摄影构图，适配不同尺寸。
+Reason：保证整批输出尺寸一致且画布始终被照片填满。
 
 ## ADR-006 Bottom Watermark
 
