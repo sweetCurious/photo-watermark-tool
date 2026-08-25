@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
 import { decodeImageFile } from '../services/imageDecodeService';
+import { useHistoryStore } from './historyStore';
 import { ImageComposition, UploadedImage, UploadedImageStatus } from '../types/image';
 import { revokeObjectUrl } from '../utils/memory';
 
@@ -45,6 +46,7 @@ export const useImageStore = create<ImageStore>((set) => ({
   selectImage: (id) => set({ selectedImageId: id }),
   removeImage: (id) =>
     set((state) => {
+      useHistoryStore.getState().clear();
       const imageIndex = state.images.findIndex((image) => image.id === id);
       const imageToRemove = state.images[imageIndex];
       const nextImages = state.images.filter((image) => image.id !== id);
@@ -62,6 +64,7 @@ export const useImageStore = create<ImageStore>((set) => ({
     }),
   clearImages: () =>
     set((state) => {
+      useHistoryStore.getState().clear();
       state.images.forEach((image) => revokeObjectUrl(image.objectUrl));
 
       return {

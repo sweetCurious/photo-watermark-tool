@@ -1,6 +1,7 @@
 import { Check, ImagePlus, LockKeyhole, Sparkles } from 'lucide-react';
 import { useImageStore } from '../../store/imageStore';
 import { useSettingsStore } from '../../store/settingsStore';
+import { HistoryControls } from '../actions/HistoryControls';
 
 function FlowStep({
   active,
@@ -67,6 +68,7 @@ export function Header() {
         />
       </div>
       <div className="flex items-center gap-2 text-xs text-slate-400">
+        <HistoryControls />
         <ImagePlus className="size-4" />
         <span>{imageCount} 张照片</span>
       </div>

@@ -90,6 +90,8 @@ Footer
 
 照片默认锁定；双击或点击“调整构图”进入构图模式，显示九宫格，并支持完成、取消与 Escape 退出。
 
+顶部提供构图撤销与重做，支持 Ctrl/Cmd+Z、Ctrl/Cmd+Shift+Z 和 Ctrl/Cmd+Y。
+
 处理完成后展示最终效果。
 
 ## 6. Right Panel

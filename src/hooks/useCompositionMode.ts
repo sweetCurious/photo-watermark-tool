@@ -1,5 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useHistoryStore } from '../store/historyStore';
+import { useImageStore } from '../store/imageStore';
 import { ImageComposition, UploadedImage } from '../types/image';
+
+interface CompositionSnapshot {
+  composition: ImageComposition;
+  imageId: string;
+}
+
+function isSameComposition(left: ImageComposition, right: ImageComposition) {
+  return (
+    left.positionX === right.positionX &&
+    left.positionY === right.positionY &&
+    left.zoom === right.zoom
+  );
+}
 
 interface UseCompositionModeParams {
   image: UploadedImage | null;
@@ -13,35 +28,64 @@ export function useCompositionMode({
   updateComposition,
 }: UseCompositionModeParams) {
   const [isEditing, setIsEditing] = useState(false);
-  const snapshotRef = useRef<ImageComposition | null>(null);
+  const snapshotRef = useRef<CompositionSnapshot | null>(null);
+
+  const commit = useCallback(() => {
+    const snapshot = snapshotRef.current;
+
+    if (!snapshot) {
+      return;
+    }
+
+    const currentImage = useImageStore
+      .getState()
+      .images.find((candidate) => candidate.id === snapshot.imageId);
+
+    if (currentImage && !isSameComposition(snapshot.composition, currentImage.composition)) {
+      const before = snapshot.composition;
+      const after = currentImage.composition;
+      const imageId = snapshot.imageId;
+
+      useHistoryStore.getState().record({
+        label: '调整照片构图',
+        redo: () => updateComposition(imageId, after),
+        undo: () => updateComposition(imageId, before),
+      });
+    }
+
+    snapshotRef.current = null;
+  }, [updateComposition]);
 
   const start = useCallback(() => {
     if (!image || isEditing) {
       return;
     }
 
-    snapshotRef.current = image.composition;
+    snapshotRef.current = {
+      composition: image.composition,
+      imageId: image.id,
+    };
     setIsEditing(true);
   }, [image, isEditing]);
 
   const cancel = useCallback(() => {
-    if (image && snapshotRef.current) {
-      updateComposition(image.id, snapshotRef.current);
+    if (snapshotRef.current) {
+      updateComposition(snapshotRef.current.imageId, snapshotRef.current.composition);
     }
 
     snapshotRef.current = null;
     setIsEditing(false);
-  }, [image, updateComposition]);
+  }, [updateComposition]);
 
   const finish = useCallback(() => {
-    snapshotRef.current = null;
+    commit();
     setIsEditing(false);
-  }, []);
+  }, [commit]);
 
   useEffect(() => {
-    snapshotRef.current = null;
+    commit();
     setIsEditing(false);
-  }, [resetKey]);
+  }, [commit, resetKey]);
 
   useEffect(() => {
     if (!isEditing) {
