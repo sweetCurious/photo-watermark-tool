@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
 import { decodeImageFile } from '../services/imageDecodeService';
-import { UploadedImage, UploadedImageStatus } from '../types/image';
+import { ImageComposition, UploadedImage, UploadedImageStatus } from '../types/image';
 import { revokeObjectUrl } from '../utils/memory';
 
 const MEMORY_WARNING_SIZE = 30 * 1024 * 1024;
@@ -14,6 +14,7 @@ interface ImageStore {
   removeImage: (id: string) => void;
   clearImages: () => void;
   updateImageStatus: (id: string, status: UploadedImageStatus) => void;
+  updateImageComposition: (id: string, composition: ImageComposition) => void;
 }
 
 export const useImageStore = create<ImageStore>((set) => ({
@@ -71,5 +72,9 @@ export const useImageStore = create<ImageStore>((set) => ({
   updateImageStatus: (id, status) =>
     set((state) => ({
       images: state.images.map((image) => (image.id === id ? { ...image, status } : image)),
+    })),
+  updateImageComposition: (id, composition) =>
+    set((state) => ({
+      images: state.images.map((image) => (image.id === id ? { ...image, composition } : image)),
     })),
 }));

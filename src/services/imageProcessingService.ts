@@ -117,7 +117,7 @@ export async function renderProcessedCanvas(
     renderCoverImage(generatedCanvas, sourceImage.image, {
       width: sourceImage.width,
       height: sourceImage.height,
-    });
+    }, image.composition);
     const bottomBar = renderBottomBar(generatedCanvas, template.watermark);
     renderLogos(generatedCanvas, bottomBar, logos, template.logo);
     throwIfCanceled(signal);

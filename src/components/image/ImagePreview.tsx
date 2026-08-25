@@ -1,15 +1,16 @@
 import { PointerEvent, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { usePreviewFitScale } from '../../hooks/usePreviewFitScale';
-import { createDrawableLogos, renderProcessedCanvas } from '../../services/imageProcessingService';
+import { createDrawableLogos } from '../../services/imageProcessingService';
 import { createLogoCanvas, getLogoRects } from '../../services/logoRenderer';
 import { useImageStore } from '../../store/imageStore';
 import { useLogoStore } from '../../store/logoStore';
 import { useSettingsStore } from '../../store/settingsStore';
-import { releaseCanvas, revokeObjectUrl } from '../../utils/memory';
+import { revokeObjectUrl } from '../../utils/memory';
 import { CanvasSetup } from '../canvas/CanvasSetup';
 import { ImageUpload } from '../upload/ImageUpload';
-import { LogoOverlayLayer } from './LogoOverlayLayer';
+import { CompositionControls } from './CompositionControls';
+import { InteractiveCanvas } from './InteractiveCanvas';
 import { PreviewToolbar } from './PreviewToolbar';
 import { canvasToObjectUrl, clamp, LogoOverlay } from './previewUtils';
 
@@ -24,12 +25,12 @@ interface DragState {
 
 export function ImagePreview() {
   const [previewScale, setPreviewScale] = useState(100);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [logoOverlays, setLogoOverlays] = useState<LogoOverlay[]>([]);
   const previewSurfaceRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const images = useImageStore((state) => state.images);
   const selectedImageId = useImageStore((state) => state.selectedImageId);
+  const updateImageComposition = useImageStore((state) => state.updateImageComposition);
   const logos = useLogoStore((state) => state.logos);
   const outputSizes = useSettingsStore((state) => state.outputSizes);
   const templates = useSettingsStore((state) => state.templates);
@@ -42,14 +43,7 @@ export function ImagePreview() {
   const displayScale = fitScale * (previewScale / 100);
 
   useEffect(() => {
-    if (!selectedImage || !canvasOrientation) {
-      setPreviewUrl((currentUrl) => {
-        if (currentUrl) {
-          revokeObjectUrl(currentUrl);
-        }
-
-        return null;
-      });
+    if (!selectedImageId || !canvasOrientation) {
       setLogoOverlays((currentOverlays) => {
         currentOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
         return [];
@@ -57,14 +51,14 @@ export function ImagePreview() {
       return;
     }
 
-    const currentImage = selectedImage;
     const currentCanvasOrientation = canvasOrientation;
     const outputSize = outputSizes[currentCanvasOrientation];
     const template = templates[currentCanvasOrientation];
     const abortController = new AbortController();
 
-    async function renderPreview() {
+    async function renderLogoOverlays() {
       let drawableLogos: Awaited<ReturnType<typeof createDrawableLogos>> = [];
+      let nextLogoOverlays: LogoOverlay[] = [];
 
       try {
         drawableLogos = await createDrawableLogos(logos, abortController.signal);
@@ -77,7 +71,7 @@ export function ImagePreview() {
           y: outputSize.height - bottomBarHeight,
         };
         const rects = getLogoRects(drawableLogos, bottomBar, template.logo, outputSize);
-        const nextLogoOverlays = await Promise.all(
+        nextLogoOverlays = await Promise.all(
           rects.map(async (rect, index) => {
             const logoCanvas = createLogoCanvas(drawableLogos[index], template.logo.removeBackground);
             const objectUrl = await canvasToObjectUrl(logoCanvas);
@@ -89,53 +83,33 @@ export function ImagePreview() {
             };
           }),
         );
-        const canvas = await renderProcessedCanvas(
-          currentImage,
-          [],
-          currentCanvasOrientation,
-          outputSize,
-          template,
-          abortController.signal,
-        );
+        if (abortController.signal.aborted) {
+          nextLogoOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
+          return;
+        }
 
-        canvas.toBlob((blob) => {
-          drawableLogos.forEach((logo) => logo.dispose());
-          releaseCanvas(canvas);
-
-          if (!blob || abortController.signal.aborted) {
-            nextLogoOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
-            return;
-          }
-
-          const nextPreviewUrl = URL.createObjectURL(blob);
-          setPreviewUrl((currentUrl) => {
-            if (currentUrl) {
-              revokeObjectUrl(currentUrl);
-            }
-
-            return nextPreviewUrl;
-          });
-          setLogoOverlays((currentOverlays) => {
-            currentOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
-            return nextLogoOverlays;
-          });
-        }, 'image/jpeg', 0.9);
+        setLogoOverlays((currentOverlays) => {
+          currentOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
+          return nextLogoOverlays;
+        });
       } catch (error) {
-        drawableLogos.forEach((logo) => logo.dispose());
+        nextLogoOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
 
         if (!abortController.signal.aborted) {
           console.error('Preview Render Failed', error);
           toast.error('预览生成失败');
         }
+      } finally {
+        drawableLogos.forEach((logo) => logo.dispose());
       }
     }
 
-    void renderPreview();
+    void renderLogoOverlays();
 
     return () => {
       abortController.abort();
     };
-  }, [canvasOrientation, logos, outputSizes, selectedImage, templates]);
+  }, [canvasOrientation, logos, outputSizes, selectedImageId, templates]);
 
   function getPointerCanvasPosition(event: PointerEvent<HTMLImageElement>) {
     const previewSurface = previewSurfaceRef.current;
@@ -262,35 +236,28 @@ export function ImagePreview() {
         previewScale={previewScale}
         setPreviewScale={setPreviewScale}
       />
-      <div className="min-h-0 flex-1 overflow-auto" ref={previewViewportRef}>
+      <div className="relative min-h-0 flex-1 overflow-auto" ref={previewViewportRef}>
         <div className="flex min-h-full min-w-full items-center justify-center p-8">
-          {previewUrl ? (
-            <div
-              className="relative shrink-0 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)] ring-1 ring-slate-900/5"
-              ref={previewSurfaceRef}
-              style={{
-                height: selectedOutputSize.height * displayScale,
-                width: selectedOutputSize.width * displayScale,
-              }}
-            >
-              <img
-                alt={selectedImage.fileName}
-                className="block h-full w-full select-none object-contain"
-                draggable={false}
-                src={previewUrl}
-              />
-              <LogoOverlayLayer
-                displayScale={displayScale}
-                logoOverlays={logoOverlays}
-                opacity={selectedTemplate.logo.opacity}
-                onPointerDown={handleLogoPointerDown}
-                onPointerMove={handleLogoPointerMove}
-                onPointerUp={handleLogoPointerUp}
-              />
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500">正在生成预览...</p>
-          )}
+          <InteractiveCanvas
+            displayScale={displayScale}
+            image={selectedImage}
+            logoOverlays={logoOverlays}
+            onCompositionChange={(composition) =>
+              updateImageComposition(selectedImage.id, composition)
+            }
+            onLogoPointerDown={handleLogoPointerDown}
+            onLogoPointerMove={handleLogoPointerMove}
+            onLogoPointerUp={handleLogoPointerUp}
+            outputSize={selectedOutputSize}
+            surfaceRef={previewSurfaceRef}
+            template={selectedTemplate}
+          />
+        </div>
+        <div className="pointer-events-none absolute bottom-4 left-1/2 z-30 -translate-x-1/2">
+          <CompositionControls
+            composition={selectedImage.composition}
+            onChange={(composition) => updateImageComposition(selectedImage.id, composition)}
+          />
         </div>
       </div>
     </div>

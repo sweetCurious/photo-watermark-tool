@@ -50,6 +50,11 @@ export async function decodeImageFile(file: File): Promise<UploadedImage> {
     const dimensions = await decodeDimensions(file, objectUrl);
 
     return {
+      composition: {
+        positionX: 0.5,
+        positionY: 0.5,
+        zoom: 1,
+      },
       id: createImageId(),
       file,
       fileName: file.name,

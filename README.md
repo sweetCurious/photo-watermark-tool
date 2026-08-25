@@ -40,7 +40,8 @@ Development is task-driven. Complete tasks strictly from `tasks/T001_Project_Ini
 2. Upload JPG, JPEG, PNG, or browser-supported HEIC photos.
 3. Upload optional PNG/SVG logos.
 4. Start processing; each photo scales proportionally to cover the canvas.
-5. Download all successful outputs as `xhs_photos.zip`.
+5. Drag and zoom each photo to adjust its non-destructive composition.
+6. Download all successful outputs as `xhs_photos.zip`.
 
 All processing runs in the browser. Photos and logos are kept in memory only and are not uploaded.
 

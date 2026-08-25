@@ -56,7 +56,7 @@ export function CanvasSetup() {
           );
         })}
       </div>
-      <p className="mt-5 text-center text-xs text-slate-400">比例不同的照片会居中裁切超出画布的边缘</p>
+      <p className="mt-5 text-center text-xs text-slate-400">照片默认居中覆盖画布，添加后可以逐张拖动调整构图</p>
     </div>
   );
 }
