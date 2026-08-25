@@ -7,8 +7,11 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
+        editor: {
+          canvas: '#EEF0F4',
+        },
         background: {
-          default: '#F8F9FA',
+          default: '#F6F7F9',
           panel: '#FFFFFF',
           upload: '#FAFAFA',
         },

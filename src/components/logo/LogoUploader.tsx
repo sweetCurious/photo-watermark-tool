@@ -56,7 +56,7 @@ export function LogoUploader() {
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-slate-950">品牌标识</p>
+          <p className="text-sm font-medium text-slate-700">上传 Logo</p>
           <p className="mt-1 text-xs text-slate-500">{message}</p>
         </div>
         <input

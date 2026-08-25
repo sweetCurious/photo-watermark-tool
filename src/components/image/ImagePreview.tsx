@@ -1,21 +1,19 @@
 import { PointerEvent, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { usePreviewFitScale } from '../../hooks/usePreviewFitScale';
 import { createDrawableLogos, renderProcessedCanvas } from '../../services/imageProcessingService';
 import {
   createLogoCanvas,
   getLogoRects,
-  LogoRect,
 } from '../../services/logoRenderer';
 import { useImageStore } from '../../store/imageStore';
 import { useLogoStore } from '../../store/logoStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { releaseCanvas, revokeObjectUrl } from '../../utils/memory';
 import { ImageUpload } from '../upload/ImageUpload';
-
-interface LogoOverlay extends LogoRect {
-  fileName: string;
-  objectUrl: string;
-}
+import { LogoOverlayLayer } from './LogoOverlayLayer';
+import { PreviewToolbar } from './PreviewToolbar';
+import { canvasToObjectUrl, clamp, LogoOverlay } from './previewUtils';
 
 interface DragState {
   id: string;
@@ -26,25 +24,8 @@ interface DragState {
   y: number;
 }
 
-function canvasToObjectUrl(canvas: HTMLCanvasElement): Promise<string> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('Preview Render Failed'));
-        return;
-      }
-
-      resolve(URL.createObjectURL(blob));
-    }, 'image/png');
-  });
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
 export function ImagePreview() {
-  const [previewScale, setPreviewScale] = useState(55);
+  const [previewScale, setPreviewScale] = useState(100);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [logoOverlays, setLogoOverlays] = useState<LogoOverlay[]>([]);
   const previewSurfaceRef = useRef<HTMLDivElement>(null);
@@ -58,7 +39,8 @@ export function ImagePreview() {
   const selectedImage = images.find((image) => image.id === selectedImageId) ?? null;
   const selectedOutputSize = selectedImage ? outputSizes[selectedImage.orientation] : null;
   const selectedTemplate = selectedImage ? templates[selectedImage.orientation] : null;
-  const displayScale = previewScale / 100;
+  const { fitScale, previewViewportRef } = usePreviewFitScale(selectedOutputSize);
+  const displayScale = fitScale * (previewScale / 100);
 
   useEffect(() => {
     if (!selectedImage) {
@@ -258,34 +240,28 @@ export function ImagePreview() {
   }
 
   if (!selectedImage || !selectedOutputSize || !selectedTemplate) {
-    return <ImageUpload />;
+    return (
+      <div className="flex h-full items-center justify-center p-10">
+        <ImageUpload />
+      </div>
+    );
   }
 
   return (
     <div className="flex h-full w-full min-w-0 flex-col">
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border-default bg-background-panel px-6">
-        <div className="min-w-0 truncate text-sm text-slate-600">
-          {selectedImage.fileName} · {selectedImage.width} x {selectedImage.height}
-        </div>
-        <label className="flex items-center gap-3 text-sm text-slate-600">
-          <span>预览大小</span>
-          <input
-            className="w-40 accent-primary"
-            max="100"
-            min="25"
-            onChange={(event) => setPreviewScale(Number(event.target.value))}
-            step="5"
-            type="range"
-            value={previewScale}
-          />
-          <span className="w-10 text-right">{previewScale}%</span>
-        </label>
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto p-8">
-        <div className="flex h-full min-h-[320px] items-center justify-center">
+      <PreviewToolbar
+        fileName={selectedImage.fileName}
+        originalHeight={selectedImage.height}
+        originalWidth={selectedImage.width}
+        outputSize={selectedOutputSize}
+        previewScale={previewScale}
+        setPreviewScale={setPreviewScale}
+      />
+      <div className="min-h-0 flex-1 overflow-auto" ref={previewViewportRef}>
+        <div className="flex min-h-full min-w-full items-center justify-center p-8">
           {previewUrl ? (
             <div
-              className="relative shrink-0 bg-background-upload"
+              className="relative shrink-0 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)] ring-1 ring-slate-900/5"
               ref={previewSurfaceRef}
               style={{
                 height: selectedOutputSize.height * displayScale,
@@ -298,27 +274,14 @@ export function ImagePreview() {
                 draggable={false}
                 src={previewUrl}
               />
-              {logoOverlays.map((overlay) => (
-                <img
-                  alt={`${overlay.fileName} 可拖动位置`}
-                  className="absolute select-none rounded border border-white/70 outline outline-1 outline-primary/70"
-                  draggable={false}
-                  key={overlay.id}
-                  onPointerDown={(event) => handleLogoPointerDown(event, overlay)}
-                  onPointerMove={handleLogoPointerMove}
-                  onPointerUp={handleLogoPointerUp}
-                  src={overlay.objectUrl}
-                  style={{
-                    cursor: 'move',
-                    height: overlay.height * displayScale,
-                    left: overlay.x * displayScale,
-                    opacity: selectedTemplate.logo.opacity,
-                    top: overlay.y * displayScale,
-                    touchAction: 'none',
-                    width: overlay.width * displayScale,
-                  }}
-                />
-              ))}
+              <LogoOverlayLayer
+                displayScale={displayScale}
+                logoOverlays={logoOverlays}
+                opacity={selectedTemplate.logo.opacity}
+                onPointerDown={handleLogoPointerDown}
+                onPointerMove={handleLogoPointerMove}
+                onPointerUp={handleLogoPointerUp}
+              />
             </div>
           ) : (
             <p className="text-sm text-slate-500">正在生成预览...</p>

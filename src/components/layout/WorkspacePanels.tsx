@@ -4,10 +4,7 @@ import { SettingsPanel } from '../settings/SettingsPanel';
 
 function LeftPanel() {
   return (
-    <aside className="flex w-[280px] shrink-0 flex-col border-r border-border-default bg-background-panel">
-      <div className="border-b border-border-default px-5 py-4">
-        <h2 className="text-lg font-semibold">图片列表</h2>
-      </div>
+    <aside className="flex w-[292px] shrink-0 flex-col border-r border-border-default bg-background-panel">
       <ImageList />
     </aside>
   );
@@ -15,20 +12,15 @@ function LeftPanel() {
 
 function PreviewPanel() {
   return (
-    <section className="flex min-w-0 flex-1 flex-col bg-[#F5F5F5]">
-      <div className="border-b border-border-default bg-background-panel px-6 py-4">
-        <h2 className="text-lg font-semibold">预览</h2>
-      </div>
-      <div className="flex flex-1 items-center justify-center">
-        <ImagePreview />
-      </div>
+    <section className="flex min-w-0 flex-1 flex-col bg-editor-canvas">
+      <ImagePreview />
     </section>
   );
 }
 
 export function WorkspacePanels() {
   return (
-    <main className="flex min-h-0 flex-1 overflow-hidden">
+    <main className="flex min-h-0 flex-1 overflow-hidden bg-background-default">
       <LeftPanel />
       <PreviewPanel />
       <SettingsPanel />

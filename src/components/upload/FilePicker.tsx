@@ -1,4 +1,5 @@
 import { ChangeEvent, DragEvent, useRef, useState } from 'react';
+import { FolderOpen, Images, Plus, UploadCloud } from 'lucide-react';
 import { useImageStore } from '../../store/imageStore';
 import { validateImageFiles } from '../../utils/fileValidation';
 
@@ -57,9 +58,11 @@ export function FilePicker({ compact = false, onMessageChange }: FilePickerProps
 
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-xl border border-dashed text-center transition-colors ${
-        compact ? 'min-h-0 px-0 py-0' : 'min-h-[320px] w-full max-w-xl px-8 py-10'
-      } ${isDragging ? 'border-primary bg-background-panel' : 'border-border-default bg-background-upload'}`}
+      className={`flex flex-col items-center justify-center text-center transition-all ${
+        compact
+          ? 'min-h-0'
+          : 'min-h-[340px] w-full max-w-xl rounded-3xl border-2 border-dashed px-8 py-10 shadow-sm'
+      } ${isDragging ? 'border-primary bg-blue-50' : compact ? '' : 'border-slate-300 bg-white/70'}`}
       onDragLeave={() => setIsDragging(false)}
       onDragOver={(event) => {
         event.preventDefault();
@@ -85,25 +88,35 @@ export function FilePicker({ compact = false, onMessageChange }: FilePickerProps
       />
       {!compact ? (
         <>
-          <p className="text-lg font-semibold">上传照片</p>
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-blue-100 text-violet-600">
+            <UploadCloud className="size-7" />
+          </div>
+          <p className="mt-5 text-lg font-bold text-slate-800">拖入照片，开始制作</p>
           <p className="mt-2 text-sm text-slate-500">{message}</p>
+          <p className="mt-1 text-xs text-slate-400">所有处理均在当前浏览器中完成</p>
         </>
       ) : null}
       <div className={compact ? 'grid w-full grid-cols-2 gap-2' : 'mt-6 flex items-center gap-3'}>
         <button
-          className="h-10 rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:bg-primary-disabled"
+          className={`flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors ${
+            compact
+              ? 'border border-border-default bg-white text-slate-700 hover:bg-slate-50'
+              : 'bg-slate-900 text-white shadow-sm hover:bg-slate-800 disabled:bg-slate-300'
+          }`}
           disabled={images.length >= 20}
           onClick={() => openPicker('files')}
           type="button"
         >
-          选择图片
+          {compact ? <Plus className="size-4" /> : <Images className="size-4" />}
+          {compact ? '添加照片' : '选择图片'}
         </button>
         <button
-          className="h-10 rounded-lg border border-border-default bg-background-panel px-4 text-sm font-medium text-slate-700 hover:border-border-hover disabled:bg-background-upload disabled:text-slate-400"
+          className="flex h-10 items-center justify-center gap-2 rounded-lg border border-border-default bg-background-panel px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:bg-background-upload disabled:text-slate-400"
           disabled={images.length >= 20}
           onClick={() => openPicker('folder')}
           type="button"
         >
+          <FolderOpen className="size-4" />
           选择文件夹
         </button>
       </div>

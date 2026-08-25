@@ -1,13 +1,15 @@
-import { ReactNode, useState } from 'react';
+import { ImageIcon, SlidersHorizontal } from 'lucide-react';
+import { ReactNode } from 'react';
 import { JPG_QUALITY } from '../../services/exportService';
+import { useImageStore } from '../../store/imageStore';
 import { TemplateSettings, useSettingsStore } from '../../store/settingsStore';
 import { ImageOrientation } from '../../types/image';
 import { LogoUploader } from '../logo/LogoUploader';
 
 function SettingsCard({ children, title }: { children: ReactNode; title: string }) {
   return (
-    <section className="rounded-lg border border-border-default bg-background-panel p-4">
-      <h3 className="text-base font-semibold text-slate-950">{title}</h3>
+    <section className="border-b border-border-default px-5 py-5 last:border-b-0">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">{title}</h3>
       <div className="mt-4 space-y-4">{children}</div>
     </section>
   );
@@ -28,7 +30,7 @@ function NumberInput({
     <label className="flex items-center justify-between gap-3 text-sm">
       <span className="text-slate-500">{label}</span>
       <input
-        className="h-9 w-28 rounded-md border border-border-default px-2 text-right"
+        className="h-9 w-24 rounded-lg border border-border-default bg-slate-50 px-2 text-right text-slate-700"
         min={min}
         onChange={(event) => onChange(Number(event.target.value))}
         type="number"
@@ -38,46 +40,18 @@ function NumberInput({
   );
 }
 
-function TemplateTabs({
-  selectedTemplate,
-  setSelectedTemplate,
-}: {
-  selectedTemplate: ImageOrientation;
-  setSelectedTemplate: (orientation: ImageOrientation) => void;
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      {[
-        ['portrait', '竖图模板'],
-        ['landscape', '横图模板'],
-      ].map(([orientation, label]) => (
-        <button
-          className={`h-9 rounded-lg border text-sm font-medium ${
-            selectedTemplate === orientation
-              ? 'border-primary bg-primary text-white'
-              : 'border-border-default bg-background-panel text-slate-600 hover:border-border-hover'
-          }`}
-          key={orientation}
-          onClick={() => setSelectedTemplate(orientation as ImageOrientation)}
-          type="button"
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function ExportCard({ selectedTemplate }: { selectedTemplate: ImageOrientation }) {
   const outputSizes = useSettingsStore((state) => state.outputSizes);
   const setOutputSize = useSettingsStore((state) => state.setOutputSize);
   const label = selectedTemplate === 'portrait' ? '竖图' : '横图';
 
   return (
-    <SettingsCard title="导出尺寸">
-      <p className="text-xs text-slate-500">当前编辑：{label}模板</p>
-      <div className="rounded-lg bg-background-upload p-3">
-        <p className="mb-2 text-sm font-medium text-slate-950">{label}</p>
+    <SettingsCard title="画布尺寸">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <p className="mb-3 flex items-center justify-between text-sm font-medium text-slate-700">
+          <span>{label}模板</span>
+          <span className="rounded-full bg-white px-2 py-1 text-[11px] font-normal text-slate-400 shadow-sm">跟随当前照片</span>
+        </p>
         <NumberInput
           label="宽度"
           min={320}
@@ -167,7 +141,7 @@ function TemplateCard({ selectedTemplate }: { selectedTemplate: ImageOrientation
     });
 
   return (
-    <SettingsCard title="模板水印">
+    <SettingsCard title="水印外观">
       <RangeInput
         label="Logo 大小"
         max={120}
@@ -238,22 +212,26 @@ function OutputCard() {
 }
 
 export function SettingsPanel() {
-  const [selectedTemplate, setSelectedTemplate] = useState<ImageOrientation>('portrait');
+  const images = useImageStore((state) => state.images);
+  const selectedImageId = useImageStore((state) => state.selectedImageId);
+  const selectedImage = images.find((image) => image.id === selectedImageId) ?? null;
+  const selectedTemplate: ImageOrientation = selectedImage?.orientation ?? 'portrait';
+  const orientationLabel = selectedTemplate === 'portrait' ? '竖图' : '横图';
 
   return (
-    <aside className="flex w-[360px] shrink-0 flex-col border-l border-border-default bg-background-panel">
-      <div className="border-b border-border-default px-5 py-4">
-        <h2 className="text-lg font-semibold">设置</h2>
+    <aside className="flex w-[340px] shrink-0 flex-col border-l border-border-default bg-background-panel">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border-default px-5">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="size-4 text-slate-400" />
+          <h2 className="text-sm font-semibold">设计设置</h2>
+        </div>
+        <span className="flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-medium text-violet-600">
+          <ImageIcon className="size-3" /> {orientationLabel}
+        </span>
       </div>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
-        <SettingsCard title="品牌标识设置">
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <SettingsCard title="品牌标识">
           <LogoUploader />
-        </SettingsCard>
-        <SettingsCard title="模板">
-          <TemplateTabs
-            selectedTemplate={selectedTemplate}
-            setSelectedTemplate={setSelectedTemplate}
-          />
         </SettingsCard>
         <ExportCard selectedTemplate={selectedTemplate} />
         <TemplateCard selectedTemplate={selectedTemplate} />
