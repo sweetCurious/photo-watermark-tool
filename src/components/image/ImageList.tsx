@@ -1,7 +1,12 @@
 import { Check, ImageIcon, LoaderCircle, Trash2, X } from 'lucide-react';
+import { useLogoOverlays } from '../../hooks/useLogoOverlays';
 import { useImageStore } from '../../store/imageStore';
+import { useLogoStore } from '../../store/logoStore';
+import { OutputSize, TemplateSettings, useSettingsStore } from '../../store/settingsStore';
 import { UploadedImage } from '../../types/image';
 import { FilePicker } from '../upload/FilePicker';
+import { CompositionThumbnail } from './CompositionThumbnail';
+import { LogoOverlay } from './previewUtils';
 
 function getOrientationLabel(orientation: string) {
   return orientation === 'portrait' ? '竖图' : '横图';
@@ -27,14 +32,20 @@ function ImageItem({
   image,
   index,
   isSelected,
+  logoOverlays,
   onRemove,
   onSelect,
+  outputSize,
+  template,
 }: {
   image: UploadedImage;
   index: number;
   isSelected: boolean;
+  logoOverlays: LogoOverlay[];
   onRemove: () => void;
   onSelect: () => void;
+  outputSize: OutputSize | null;
+  template: TemplateSettings | null;
 }) {
   return (
     <div
@@ -50,12 +61,21 @@ function ImageItem({
         onClick={onSelect}
         type="button"
       >
-        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-          <img alt={image.fileName} className="h-full w-full object-cover" src={image.objectUrl} />
-          <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white">
-            {index + 1}
-          </span>
-        </div>
+        {outputSize && template ? (
+          <CompositionThumbnail
+            image={image}
+            index={index}
+            logoOverlays={logoOverlays}
+            outputSize={outputSize}
+            template={template}
+          />
+        ) : (
+          <img
+            alt={image.fileName}
+            className="size-14 shrink-0 rounded-lg object-cover"
+            src={image.objectUrl}
+          />
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-slate-800">{image.fileName}</p>
           <p className="mt-1 text-[11px] text-slate-400">
@@ -87,6 +107,18 @@ export function ImageList() {
   const selectImage = useImageStore((state) => state.selectImage);
   const removeImage = useImageStore((state) => state.removeImage);
   const clearImages = useImageStore((state) => state.clearImages);
+  const logos = useLogoStore((state) => state.logos);
+  const canvasOrientation = useSettingsStore((state) => state.canvasOrientation);
+  const outputSizes = useSettingsStore((state) => state.outputSizes);
+  const templates = useSettingsStore((state) => state.templates);
+  const outputSize = canvasOrientation ? outputSizes[canvasOrientation] : null;
+  const template = canvasOrientation ? templates[canvasOrientation] : null;
+  const { overlays: logoOverlays } = useLogoOverlays({
+    enabled: images.length > 0 && canvasOrientation !== null,
+    logos,
+    outputSize,
+    template,
+  });
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -120,8 +152,11 @@ export function ImageList() {
               index={index}
               isSelected={image.id === selectedImageId}
               key={image.id}
+              logoOverlays={logoOverlays}
               onRemove={() => removeImage(image.id)}
               onSelect={() => selectImage(image.id)}
+              outputSize={outputSize}
+              template={template}
             />
           ))
         )}

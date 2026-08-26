@@ -1,19 +1,16 @@
-import { PointerEvent, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { PointerEvent, useRef, useState } from 'react';
 import { useCompositionMode } from '../../hooks/useCompositionMode';
+import { useLogoOverlays } from '../../hooks/useLogoOverlays';
 import { usePreviewFitScale } from '../../hooks/usePreviewFitScale';
-import { createDrawableLogos } from '../../services/imageProcessingService';
-import { createLogoCanvas, getLogoRects } from '../../services/logoRenderer';
 import { useImageStore } from '../../store/imageStore';
 import { useLogoStore } from '../../store/logoStore';
 import { useSettingsStore } from '../../store/settingsStore';
-import { revokeObjectUrl } from '../../utils/memory';
 import { CanvasSetup } from '../canvas/CanvasSetup';
 import { ImageUpload } from '../upload/ImageUpload';
 import { CompositionControls } from './CompositionControls';
 import { InteractiveCanvas } from './InteractiveCanvas';
 import { PreviewToolbar } from './PreviewToolbar';
-import { canvasToObjectUrl, clamp, LogoOverlay } from './previewUtils';
+import { clamp, LogoOverlay } from './previewUtils';
 
 interface DragState {
   id: string;
@@ -26,7 +23,6 @@ interface DragState {
 
 export function ImagePreview() {
   const [previewScale, setPreviewScale] = useState(100);
-  const [logoOverlays, setLogoOverlays] = useState<LogoOverlay[]>([]);
   const previewSurfaceRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const images = useImageStore((state) => state.images);
@@ -40,6 +36,12 @@ export function ImagePreview() {
   const selectedImage = images.find((image) => image.id === selectedImageId) ?? null;
   const selectedOutputSize = canvasOrientation ? outputSizes[canvasOrientation] : null;
   const selectedTemplate = canvasOrientation ? templates[canvasOrientation] : null;
+  const { overlays: logoOverlays, setOverlays: setLogoOverlays } = useLogoOverlays({
+    enabled: Boolean(selectedImageId && canvasOrientation),
+    logos,
+    outputSize: selectedOutputSize,
+    template: selectedTemplate,
+  });
   const { fitScale, previewViewportRef } = usePreviewFitScale(selectedOutputSize);
   const compositionMode = useCompositionMode({
     image: selectedImage,
@@ -47,75 +49,6 @@ export function ImagePreview() {
     updateComposition: updateImageComposition,
   });
   const displayScale = fitScale * (previewScale / 100);
-
-  useEffect(() => {
-    if (!selectedImageId || !canvasOrientation) {
-      setLogoOverlays((currentOverlays) => {
-        currentOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
-        return [];
-      });
-      return;
-    }
-
-    const currentCanvasOrientation = canvasOrientation;
-    const outputSize = outputSizes[currentCanvasOrientation];
-    const template = templates[currentCanvasOrientation];
-    const abortController = new AbortController();
-
-    async function renderLogoOverlays() {
-      let drawableLogos: Awaited<ReturnType<typeof createDrawableLogos>> = [];
-      let nextLogoOverlays: LogoOverlay[] = [];
-
-      try {
-        drawableLogos = await createDrawableLogos(logos, abortController.signal);
-
-        const bottomBarHeight = outputSize.height * template.watermark.barHeightRatio;
-        const bottomBar = {
-          height: bottomBarHeight,
-          width: outputSize.width,
-          x: 0,
-          y: outputSize.height - bottomBarHeight,
-        };
-        const rects = getLogoRects(drawableLogos, bottomBar, template.logo, outputSize);
-        nextLogoOverlays = await Promise.all(
-          rects.map(async (rect, index) => {
-            const logoCanvas = createLogoCanvas(drawableLogos[index], template.logo.removeBackground);
-            const objectUrl = await canvasToObjectUrl(logoCanvas);
-
-            return {
-              ...rect,
-              fileName: logos[index].fileName,
-              objectUrl,
-            };
-          }),
-        );
-        if (abortController.signal.aborted) {
-          nextLogoOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
-          return;
-        }
-
-        setLogoOverlays((currentOverlays) => {
-          currentOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
-          return nextLogoOverlays;
-        });
-      } catch (error) {
-        nextLogoOverlays.forEach((overlay) => revokeObjectUrl(overlay.objectUrl));
-
-        if (!abortController.signal.aborted) {
-          console.error('Preview Render Failed', error);
-          toast.error('预览生成失败');
-        }
-      } finally {
-        drawableLogos.forEach((logo) => logo.dispose());
-      }
-    }
-
-    void renderLogoOverlays();
-
-    return () => {
-      abortController.abort();
-    };
-  }, [canvasOrientation, logos, outputSizes, selectedImageId, templates]);
 
   function getPointerCanvasPosition(event: PointerEvent<HTMLImageElement>) {
     const previewSurface = previewSurfaceRef.current;

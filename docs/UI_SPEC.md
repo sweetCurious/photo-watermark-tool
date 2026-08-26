@@ -60,7 +60,7 @@ Footer
 
 每项展示：
 
-- 缩略图
+- 最终画布构图缩略图（照片、底栏、Logo）
 - 文件名
 - 图片尺寸
 - 方向标签：Portrait / Landscape
