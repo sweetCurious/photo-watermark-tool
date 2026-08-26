@@ -19,11 +19,10 @@ interface DrawableImage {
 }
 
 interface ProcessImagesParams {
-  canvasOrientation: ImageOrientation;
   images: UploadedImage[];
   logos: LogoAsset[];
-  outputSize: OutputSize;
-  template: TemplateSettings;
+  outputSizes: Record<ImageOrientation, OutputSize>;
+  templates: Record<ImageOrientation, TemplateSettings>;
   signal: AbortSignal;
   onImageError: (error: unknown) => void;
   onImageStatus: (id: string, status: UploadedImageStatus) => void;
@@ -128,15 +127,14 @@ export async function renderProcessedCanvas(
 }
 
 export async function processImages({
-  canvasOrientation,
   images,
   logos,
   onImageError,
   onImageStatus,
   onProgress,
-  outputSize,
+  outputSizes,
   signal,
-  template,
+  templates,
 }: ProcessImagesParams): Promise<JpgExportResult[]> {
   let nextIndex = 0;
   const exportedFiles: JpgExportResult[] = [];
@@ -154,9 +152,9 @@ export async function processImages({
         const canvas = await renderProcessedCanvas(
           image,
           drawableLogos,
-          canvasOrientation,
-          outputSize,
-          template,
+          image.orientation,
+          outputSizes[image.orientation],
+          templates[image.orientation],
           signal,
         );
         try {

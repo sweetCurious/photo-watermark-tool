@@ -40,11 +40,10 @@ export function useImageProcessing() {
 
     try {
       const files = await processImages({
-        canvasOrientation,
         images,
         logos,
-        outputSize: outputSizes[canvasOrientation],
-        template: templates[canvasOrientation],
+        outputSizes,
+        templates,
         signal: abortController.signal,
         onImageStatus: updateImageStatus,
         onProgress: () =>

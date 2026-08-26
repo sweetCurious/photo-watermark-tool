@@ -3,7 +3,7 @@ import { useLogoOverlays } from '../../hooks/useLogoOverlays';
 import { useImageStore } from '../../store/imageStore';
 import { useLogoStore } from '../../store/logoStore';
 import { OutputSize, TemplateSettings, useSettingsStore } from '../../store/settingsStore';
-import { UploadedImage } from '../../types/image';
+import { ImageOrientation, UploadedImage } from '../../types/image';
 import { FilePicker } from '../upload/FilePicker';
 import { CompositionThumbnail } from './CompositionThumbnail';
 import { LogoOverlay } from './previewUtils';
@@ -32,7 +32,7 @@ function ImageItem({
   image,
   index,
   isSelected,
-  logoOverlays,
+  logoOverlaysByOrientation,
   onRemove,
   onSelect,
   outputSize,
@@ -41,7 +41,7 @@ function ImageItem({
   image: UploadedImage;
   index: number;
   isSelected: boolean;
-  logoOverlays: LogoOverlay[];
+  logoOverlaysByOrientation: Record<ImageOrientation, LogoOverlay[]>;
   onRemove: () => void;
   onSelect: () => void;
   outputSize: OutputSize | null;
@@ -65,7 +65,7 @@ function ImageItem({
           <CompositionThumbnail
             image={image}
             index={index}
-            logoOverlays={logoOverlays}
+            logoOverlays={logoOverlaysByOrientation[image.orientation]}
             outputSize={outputSize}
             template={template}
           />
@@ -108,17 +108,26 @@ export function ImageList() {
   const removeImage = useImageStore((state) => state.removeImage);
   const clearImages = useImageStore((state) => state.clearImages);
   const logos = useLogoStore((state) => state.logos);
-  const canvasOrientation = useSettingsStore((state) => state.canvasOrientation);
   const outputSizes = useSettingsStore((state) => state.outputSizes);
   const templates = useSettingsStore((state) => state.templates);
-  const outputSize = canvasOrientation ? outputSizes[canvasOrientation] : null;
-  const template = canvasOrientation ? templates[canvasOrientation] : null;
-  const { overlays: logoOverlays } = useLogoOverlays({
-    enabled: images.length > 0 && canvasOrientation !== null,
+  const hasPortraitImages = images.some((image) => image.orientation === 'portrait');
+  const hasLandscapeImages = images.some((image) => image.orientation === 'landscape');
+  const { overlays: portraitLogoOverlays } = useLogoOverlays({
+    enabled: hasPortraitImages,
     logos,
-    outputSize,
-    template,
+    outputSize: outputSizes.portrait,
+    template: templates.portrait,
   });
+  const { overlays: landscapeLogoOverlays } = useLogoOverlays({
+    enabled: hasLandscapeImages,
+    logos,
+    outputSize: outputSizes.landscape,
+    template: templates.landscape,
+  });
+  const logoOverlaysByOrientation = {
+    landscape: landscapeLogoOverlays,
+    portrait: portraitLogoOverlays,
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -152,11 +161,11 @@ export function ImageList() {
               index={index}
               isSelected={image.id === selectedImageId}
               key={image.id}
-              logoOverlays={logoOverlays}
+              logoOverlaysByOrientation={logoOverlaysByOrientation}
               onRemove={() => removeImage(image.id)}
               onSelect={() => selectImage(image.id)}
-              outputSize={outputSize}
-              template={template}
+              outputSize={outputSizes[image.orientation]}
+              template={templates[image.orientation]}
             />
           ))
         )}

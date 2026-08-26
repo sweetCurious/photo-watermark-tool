@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { decodeImageFile } from '../services/imageDecodeService';
 import { useHistoryStore } from './historyStore';
+import { useSettingsStore } from './settingsStore';
 import { ImageComposition, UploadedImage, UploadedImageStatus } from '../types/image';
 import { revokeObjectUrl } from '../utils/memory';
 
@@ -32,10 +33,16 @@ export const useImageStore = create<ImageStore>((set) => ({
     files.forEach((file) => {
       decodeImageFile(file)
         .then((image) =>
-          set((state) => ({
-            images: [...state.images, image],
-            selectedImageId: state.selectedImageId ?? image.id,
-          })),
+          set((state) => {
+            if (!state.selectedImageId) {
+              useSettingsStore.getState().setCanvasOrientation(image.orientation);
+            }
+
+            return {
+              images: [...state.images, image],
+              selectedImageId: state.selectedImageId ?? image.id,
+            };
+          }),
         )
         .catch((error: unknown) => {
           console.error('Image Load Failed', error);
@@ -43,7 +50,16 @@ export const useImageStore = create<ImageStore>((set) => ({
         });
     });
   },
-  selectImage: (id) => set({ selectedImageId: id }),
+  selectImage: (id) =>
+    set((state) => {
+      const image = state.images.find((candidate) => candidate.id === id);
+
+      if (image) {
+        useSettingsStore.getState().setCanvasOrientation(image.orientation);
+      }
+
+      return { selectedImageId: id };
+    }),
   removeImage: (id) =>
     set((state) => {
       useHistoryStore.getState().clear();

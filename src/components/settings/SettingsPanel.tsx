@@ -1,6 +1,7 @@
 import { ImageIcon, RectangleHorizontal, RectangleVertical, SlidersHorizontal } from 'lucide-react';
 import { ReactNode } from 'react';
 import { JPG_QUALITY } from '../../services/exportService';
+import { useImageStore } from '../../store/imageStore';
 import { TemplateSettings, useSettingsStore } from '../../store/settingsStore';
 import { ImageOrientation } from '../../types/image';
 import { LogoUploader } from '../logo/LogoUploader';
@@ -211,10 +212,26 @@ function OutputCard() {
 }
 
 export function SettingsPanel() {
+  const images = useImageStore((state) => state.images);
+  const selectedImageId = useImageStore((state) => state.selectedImageId);
+  const selectImage = useImageStore((state) => state.selectImage);
   const canvasOrientation = useSettingsStore((state) => state.canvasOrientation);
   const setCanvasOrientation = useSettingsStore((state) => state.setCanvasOrientation);
-  const selectedTemplate: ImageOrientation = canvasOrientation ?? 'portrait';
+  const selectedImage = images.find((image) => image.id === selectedImageId);
+  const selectedTemplate: ImageOrientation =
+    selectedImage?.orientation ?? canvasOrientation ?? 'portrait';
   const orientationLabel = selectedTemplate === 'portrait' ? '竖图' : '横图';
+
+  function selectOrientation(orientation: ImageOrientation) {
+    const matchingImage = images.find((image) => image.orientation === orientation);
+
+    if (matchingImage) {
+      selectImage(matchingImage.id);
+      return;
+    }
+
+    setCanvasOrientation(orientation);
+  }
 
   return (
     <aside className="flex w-[340px] shrink-0 flex-col border-l border-border-default bg-background-panel">
@@ -236,19 +253,21 @@ export function SettingsPanel() {
             ] as const).map(([orientation, label, Icon]) => (
               <button
                 className={`flex h-11 items-center justify-center gap-2 rounded-xl border text-sm font-medium ${
-                  selectedTemplate === orientation && canvasOrientation
+                  selectedTemplate === orientation
                     ? 'border-violet-500 bg-violet-50 text-violet-700'
                     : 'border-slate-200 text-slate-500 hover:bg-slate-50'
                 }`}
                 key={orientation}
-                onClick={() => setCanvasOrientation(orientation)}
+                onClick={() => selectOrientation(orientation)}
                 type="button"
               >
                 <Icon className="size-4" /> {label}
               </button>
             ))}
           </div>
-          <p className="text-xs leading-5 text-slate-400">切换画布会应用到当前批次的全部照片。</p>
+          <p className="text-xs leading-5 text-slate-400">
+            竖图和横图分别保存设置；选择照片时会自动切换对应画布。
+          </p>
         </SettingsCard>
         <SettingsCard title="品牌标识">
           <LogoUploader />

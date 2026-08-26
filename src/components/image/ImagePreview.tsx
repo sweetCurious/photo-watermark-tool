@@ -34,10 +34,11 @@ export function ImagePreview() {
   const canvasOrientation = useSettingsStore((state) => state.canvasOrientation);
   const setTemplate = useSettingsStore((state) => state.setTemplate);
   const selectedImage = images.find((image) => image.id === selectedImageId) ?? null;
-  const selectedOutputSize = canvasOrientation ? outputSizes[canvasOrientation] : null;
-  const selectedTemplate = canvasOrientation ? templates[canvasOrientation] : null;
+  const activeOrientation = selectedImage?.orientation ?? canvasOrientation;
+  const selectedOutputSize = activeOrientation ? outputSizes[activeOrientation] : null;
+  const selectedTemplate = activeOrientation ? templates[activeOrientation] : null;
   const { overlays: logoOverlays, setOverlays: setLogoOverlays } = useLogoOverlays({
-    enabled: Boolean(selectedImageId && canvasOrientation),
+    enabled: Boolean(selectedImageId && activeOrientation),
     logos,
     outputSize: selectedOutputSize,
     template: selectedTemplate,
@@ -45,7 +46,7 @@ export function ImagePreview() {
   const { fitScale, previewViewportRef } = usePreviewFitScale(selectedOutputSize);
   const compositionMode = useCompositionMode({
     image: selectedImage,
-    resetKey: `${canvasOrientation ?? 'none'}:${selectedImageId ?? 'none'}`,
+    resetKey: `${activeOrientation ?? 'none'}:${selectedImageId ?? 'none'}`,
     updateComposition: updateImageComposition,
   });
   const displayScale = fitScale * (previewScale / 100);
@@ -130,14 +131,14 @@ export function ImagePreview() {
     if (
       !dragState ||
       dragState.pointerId !== event.pointerId ||
-      !canvasOrientation ||
+      !activeOrientation ||
       !selectedOutputSize ||
       !selectedTemplate
     ) {
       return;
     }
 
-    setTemplate(canvasOrientation, {
+    setTemplate(activeOrientation, {
       ...selectedTemplate,
       logo: {
         ...selectedTemplate.logo,
